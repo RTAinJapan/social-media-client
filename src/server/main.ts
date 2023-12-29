@@ -24,9 +24,7 @@ await server.register(helmet, {
 	hsts: env.NODE_ENV === "production",
 });
 
-await server.register(cookie, {
-	secret: env.COOKIE_SECRET,
-});
+await server.register(cookie);
 
 await server.register(fastifyTRPCPlugin, {
 	prefix: "/trpc",

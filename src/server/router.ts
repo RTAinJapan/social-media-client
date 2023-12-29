@@ -16,6 +16,9 @@ import * as path from "node:path";
 
 const tmpDir = os.tmpdir();
 
+const discordClientId = env.DISCORD_CLIENT_ID;
+const discordClientSecret = env.DISCORD_CLIENT_SECRET;
+
 const discordOauthRedirectUrl = new URL("/validate-oauth", env.CLIENT_ORIGIN);
 
 const authorizationRouter = router({
@@ -30,7 +33,7 @@ const authorizationRouter = router({
 
 		const oauthUrl = new URL("https://discord.com/oauth2/authorize");
 		oauthUrl.searchParams.append("response_type", "code");
-		oauthUrl.searchParams.append("client_id", env.DISCORD_CLIENT_ID);
+		oauthUrl.searchParams.append("client_id", discordClientId);
 		oauthUrl.searchParams.append("scope", "identify guilds.members.read");
 		oauthUrl.searchParams.append("state", state);
 		oauthUrl.searchParams.append("redirect_uri", discordOauthRedirectUrl.href);
@@ -49,7 +52,7 @@ const authorizationRouter = router({
 			}
 
 			const authorization = Buffer.from(
-				env.DISCORD_CLIENT_ID + ":" + env.DISCORD_CLIENT_SECRET
+				discordClientId + ":" + discordClientSecret
 			).toString("base64");
 			const token = await ky
 				.post(`https://discord.com/api/v10/oauth2/token`, {

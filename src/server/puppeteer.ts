@@ -1,24 +1,8 @@
-/// <reference lib="dom" />
-
 import puppeteer from "puppeteer";
 import { env } from "./env.js";
-import { secretManagerClient } from "./aws/secret-manager.js";
-import { GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 
 const twitterUsername = env.TWITTER_USERNAME;
-
-let twitterPassword = env.TWITTER_PASSWORD;
-
-if (env.NODE_ENV === "production") {
-	const result = await secretManagerClient.send(
-		new GetSecretValueCommand({
-			SecretId: env.TWITTER_PASSWORD_SECRET_ID,
-		})
-	);
-	if (result.SecretString) {
-		twitterPassword = result.SecretString;
-	}
-}
+const twitterPassword = env.TWITTER_PASSWORD;
 
 const browser = await puppeteer.launch({
 	headless: env.NODE_ENV === "production",
