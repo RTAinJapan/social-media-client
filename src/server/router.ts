@@ -12,7 +12,6 @@ import ky from "ky";
 import { tweet } from "./puppeteer.js";
 import * as path from "node:path";
 import { tmpdir } from "./tmpdir.js";
-import * as fs from "node:fs";
 
 const discordClientId = env.DISCORD_CLIENT_ID;
 const discordClientSecret = env.DISCORD_CLIENT_SECRET;
