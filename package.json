@@ -16,6 +16,7 @@
 		"@fastify/cookie": "^9.2.0",
 		"@fastify/cors": "^8.5.0",
 		"@fastify/helmet": "^11.1.1",
+		"@fastify/multipart": "^8.0.0",
 		"@prisma/client": "^5.7.1",
 		"@trpc/server": "^10.45.0",
 		"discord.js": "^14.14.1",

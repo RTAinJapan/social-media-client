@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from "crypto";
+import { randomBytes } from "crypto";
 import { env } from "./env.js";
 import { authorizedProcedure, publicProcedure, router } from "./trpc.js";
 import {
@@ -10,11 +10,8 @@ import { TRPCError } from "@trpc/server";
 import { prisma } from "./prisma.js";
 import ky from "ky";
 import { tweet } from "./puppeteer.js";
-import * as os from "node:os";
-import * as fs from "node:fs";
 import * as path from "node:path";
-
-const tmpDir = os.tmpdir();
+import { tmpdir } from "./tmpdir.js";
 
 const discordClientId = env.DISCORD_CLIENT_ID;
 const discordClientSecret = env.DISCORD_CLIENT_SECRET;
@@ -107,7 +104,6 @@ const authorizationRouter = router({
 				)
 				.json<{ roles: string[] }>();
 			const validRoleIds = env.DISCORD_VALID_ROLE_IDS.split(",");
-			console.log(validRoleIds);
 			const validUser = userGuild.roles.some((role) =>
 				validRoleIds.includes(role)
 			);
@@ -131,7 +127,7 @@ const authorizationRouter = router({
 			});
 
 			ctx.res.setCookie(SESSION_COOKIE_NAME, sessionToken, {
-				path: "/trpc",
+				path: "/",
 				httpOnly: true,
 				sameSite: "strict",
 				maxAge: 24 * 60 * 60, // 1 day
@@ -141,7 +137,7 @@ const authorizationRouter = router({
 
 	signOut: authorizedProcedure.mutation(async ({ ctx }) => {
 		ctx.res.clearCookie(SESSION_COOKIE_NAME, {
-			path: "/trpc",
+			path: "/",
 		});
 	}),
 });
@@ -158,30 +154,11 @@ export const appRouter = router({
 		.input(
 			z.object({
 				text: z.string(),
-				files: z.array(
-					z.object({
-						name: z.string(),
-						content: z.string(),
-					})
-				),
+				files: z.array(z.string()),
 			})
 		)
 		.mutation(async ({ input }) => {
-			const files = await Promise.all(
-				input.files.map(async (file) => {
-					const fileContent = Buffer.from(file.content, "base64");
-					const extension = file.name.split(".").pop();
-					if (!extension) {
-						throw new TRPCError({
-							code: "BAD_REQUEST",
-							message: "no extension in file name",
-						});
-					}
-					const tmpFile = path.join(tmpDir, `${randomUUID()}.${extension}`);
-					await fs.promises.writeFile(tmpFile, fileContent);
-					return tmpFile;
-				})
-			);
+			const files = input.files.map((file) => path.join(tmpdir, file));
 			await tweet(input.text, files);
 		}),
 });

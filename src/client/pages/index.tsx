@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { trpc } from "../trpc";
 import { useForm } from "react-hook-form";
 
@@ -6,21 +7,22 @@ const SignedOut = () => {
 	return <a href={data?.oauthUrl}>ログイン</a>;
 };
 
-const fileToBase64 = (file: File) => {
-	const reader = new FileReader();
-	reader.readAsDataURL(file);
-	return new Promise<string>((resolve) => {
-		reader.onload = () => {
-			if (typeof reader.result === "string") {
-				const base64 = reader.result.split(",")[1];
-				if (base64) {
-					resolve(base64);
-				}
-			} else {
-				throw new Error("reader.result is not string");
-			}
-		};
+const uploadFileResponseSchema = z.array(z.string());
+const uploadFile = async (files: FileList) => {
+	const formdata = new FormData();
+	for (const file of files) {
+		formdata.append("files", file);
+	}
+	const res = await fetch(`${import.meta.env.VITE_API_ORIGIN}/file`, {
+		method: "POST",
+		body: formdata,
+		credentials: "include",
 	});
+	if (!res.ok) {
+		throw new Error("failed to upload file");
+	}
+	const json = await res.json();
+	return uploadFileResponseSchema.parse(json);
 };
 
 const TweetForm = () => {
@@ -49,12 +51,7 @@ const TweetForm = () => {
 			}}
 			onSubmit={handleSubmit(async (data) => {
 				const text = data.tweetText;
-				const files: Array<{ name: string; content: string }> = [];
-				for (const file of data.files) {
-					const name = file.name;
-					const content = await fileToBase64(file);
-					files.push({ name, content });
-				}
+				const files = await uploadFile(data.files);
 				tweet({ text, files });
 			})}
 		>
@@ -66,7 +63,12 @@ const TweetForm = () => {
 					width: "300px",
 				}}
 			/>
-			<input type="file" {...register("files")} />
+			<input
+				type="file"
+				accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime"
+				multiple
+				{...register("files")}
+			/>
 			<button type="submit" disabled={isLoading} style={{ justifySelf: "end" }}>
 				送信
 			</button>

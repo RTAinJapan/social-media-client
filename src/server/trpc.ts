@@ -1,7 +1,7 @@
 import { TRPCError, initTRPC } from "@trpc/server";
 import type { CreateFastifyContextOptions } from "@trpc/server/adapters/fastify";
 import { SESSION_COOKIE_NAME } from "./constant.js";
-import { prisma } from "./prisma.js";
+import { validateSession } from "./validate-session.js";
 
 export const createContext = async ({
 	req,
@@ -38,22 +38,14 @@ const authorizedMiddleware = middleware(async (opts) => {
 		throw new TRPCError({ code: "UNAUTHORIZED" });
 	}
 
-	const session = await prisma.session.findUnique({
-		where: {
-			token: sessionToken,
-		},
-		include: {
-			user: true,
-		},
-	});
-
-	if (!session) {
+	const user = await validateSession(sessionToken);
+	if (!user) {
 		throw new TRPCError({ code: "UNAUTHORIZED" });
 	}
 
 	return opts.next({
 		ctx: {
-			user: session.user,
+			user,
 		},
 	});
 });
