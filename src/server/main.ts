@@ -47,7 +47,6 @@ await server.register(multipart);
 
 server.post("/file", async (req, res) => {
 	const sessionToken = req.cookies[SESSION_COOKIE_NAME];
-	console.log(sessionToken);
 	if (!sessionToken) {
 		res.status(401);
 		return;
