@@ -161,6 +161,9 @@ export const appRouter = router({
 			const files = input.files.map((file) => path.join(tmpdir, file));
 			await tweet(input.text, files);
 		}),
+	twitterAccount: authorizedProcedure.query(() => {
+		return { username: env.TWITTER_USERNAME };
+	}),
 });
 
 export type AppRouter = typeof appRouter;

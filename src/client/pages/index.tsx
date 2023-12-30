@@ -86,6 +86,8 @@ export const Component = () => {
 
 	const { data: me, isRefetching, isLoading, isError } = trpc.me.useQuery();
 
+	const { data: twitterAccount } = trpc.twitterAccount.useQuery();
+
 	if (isLoading && !isRefetching) {
 		return <div>loading...</div>;
 	}
@@ -115,6 +117,7 @@ export const Component = () => {
 			>
 				ログアウト
 			</button>
+			<div>{twitterAccount?.username}としてツイートする</div>
 			<TweetForm />
 		</div>
 	);
