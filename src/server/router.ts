@@ -160,13 +160,7 @@ export const appRouter = router({
 		)
 		.mutation(async ({ input }) => {
 			const files = input.files.map((file) => path.join(tmpdir, file));
-			try {
-				await tweet(input.text, files);
-			} finally {
-				for (const file of files) {
-					await fs.promises.rm(file);
-				}
-			}
+			await tweet(input.text, files);
 		}),
 });
 
