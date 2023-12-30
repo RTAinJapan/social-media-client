@@ -12,6 +12,7 @@ import ky from "ky";
 import { tweet } from "./puppeteer.js";
 import * as path from "node:path";
 import { tmpdir } from "./tmpdir.js";
+import * as fs from "node:fs";
 
 const discordClientId = env.DISCORD_CLIENT_ID;
 const discordClientSecret = env.DISCORD_CLIENT_SECRET;
@@ -159,7 +160,13 @@ export const appRouter = router({
 		)
 		.mutation(async ({ input }) => {
 			const files = input.files.map((file) => path.join(tmpdir, file));
-			await tweet(input.text, files);
+			try {
+				await tweet(input.text, files);
+			} finally {
+				for (const file of files) {
+					await fs.promises.rm(file);
+				}
+			}
 		}),
 });
 
