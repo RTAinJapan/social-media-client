@@ -68,4 +68,4 @@ COPY --from=build /app/build build
 
 ENV NODE_ENV=production
 
-CMD ["node", "--enable-source-maps", "build/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node --enable-source-maps build/main.js"]
