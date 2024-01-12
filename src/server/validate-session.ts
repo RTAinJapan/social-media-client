@@ -5,14 +5,11 @@ export const validateSession = async (sessiontoken: string) => {
 		where: {
 			token: sessiontoken,
 		},
-		include: {
-			user: true,
-		},
 	});
 
 	if (!session) {
 		return;
 	}
 
-	return session.user;
+	return session;
 };

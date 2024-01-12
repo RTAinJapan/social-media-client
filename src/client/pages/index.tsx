@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { trpc } from "../trpc";
 import { useForm } from "react-hook-form";
+import twitterText from "twitter-text";
 
 const SignedOut = () => {
 	const { data } = trpc.authorization.initialize.useQuery();
@@ -26,7 +27,7 @@ const uploadFile = async (files: FileList) => {
 };
 
 const TweetForm = () => {
-	const { register, handleSubmit, reset } = useForm<{
+	const { register, handleSubmit, reset, watch } = useForm<{
 		tweetText: string;
 		files: FileList;
 	}>();
@@ -40,6 +41,9 @@ const TweetForm = () => {
 			alert("ツイートに失敗しました");
 		},
 	});
+
+	const watchTweetText = watch("tweetText");
+	const tweetLength = twitterText.getTweetLength(watchTweetText);
 
 	return (
 		<form
@@ -60,9 +64,10 @@ const TweetForm = () => {
 				disabled={isLoading}
 				style={{
 					height: "200px",
-					width: "300px",
+					width: "360px",
 				}}
 			/>
+			<div style={{ justifySelf: "end" }}>{tweetLength}/280</div>
 			<input
 				type="file"
 				accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime"
@@ -106,17 +111,25 @@ export const Component = () => {
 				gap: "8px",
 			}}
 		>
-			<div>{me?.username}としてログイン中</div>
-			<button
-				onClick={() => {
-					signOut();
-				}}
+			<div
 				style={{
-					justifySelf: "end",
+					display: "grid",
+					gridTemplateColumns: "1fr auto",
+					placeSelf: "stretch",
 				}}
 			>
-				ログアウト
-			</button>
+				<div>{me?.username}としてログイン中</div>
+				<button
+					onClick={() => {
+						signOut();
+					}}
+					style={{
+						justifySelf: "end",
+					}}
+				>
+					ログアウト
+				</button>
+			</div>
 			<div>{twitterAccount?.username}としてツイートする</div>
 			<TweetForm />
 		</div>

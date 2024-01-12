@@ -38,14 +38,14 @@ const authorizedMiddleware = middleware(async (opts) => {
 		throw new TRPCError({ code: "UNAUTHORIZED" });
 	}
 
-	const user = await validateSession(sessionToken);
-	if (!user) {
+	const session = await validateSession(sessionToken);
+	if (!session) {
 		throw new TRPCError({ code: "UNAUTHORIZED" });
 	}
 
 	return opts.next({
 		ctx: {
-			user,
+			session,
 		},
 	});
 });

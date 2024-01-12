@@ -36,6 +36,8 @@ export const setupTwitterPage = async () => {
 			break;
 		}
 	}
+	await loginPage.waitForNavigation();
+	await loginPage.close();
 };
 
 export const tweet = async (text: string, files: string[]) => {

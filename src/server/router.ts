@@ -12,6 +12,7 @@ import ky from "ky";
 import { tweet } from "./puppeteer.js";
 import * as path from "node:path";
 import { tmpdir } from "./tmpdir.js";
+import { validateSession } from "./validate-session.js";
 
 const discordClientId = env.DISCORD_CLIENT_ID;
 const discordClientSecret = env.DISCORD_CLIENT_SECRET;
@@ -78,21 +79,6 @@ const authorizationRouter = router({
 				})
 				.json<{ id: string; username: string; discriminator: string }>();
 
-			await prisma.user.upsert({
-				create: {
-					discordId: user.id,
-					discordUsername: user.username,
-					discordDiscriminator: user.discriminator,
-				},
-				update: {
-					discordUsername: user.username,
-					discordDiscriminator: user.discriminator,
-				},
-				where: {
-					discordId: user.id,
-				},
-			});
-
 			const userGuild = await ky
 				.get(
 					`https://discord.com/api/users/@me/guilds/${env.DISCORD_SERVER_ID}/member`,
@@ -117,12 +103,8 @@ const authorizationRouter = router({
 			const sessionToken = randomBytes(200).toString("base64url");
 			await prisma.session.create({
 				data: {
+					discordUsername: user.username,
 					token: sessionToken,
-					user: {
-						connect: {
-							discordId: user.id,
-						},
-					},
 				},
 			});
 
@@ -143,13 +125,25 @@ const authorizationRouter = router({
 });
 
 export const appRouter = router({
-	me: authorizedProcedure.query(({ ctx }) => {
+	me: publicProcedure.query(async ({ ctx }) => {
+		const sessionToken = ctx.req.cookies[SESSION_COOKIE_NAME];
+		if (!sessionToken) {
+			return;
+		}
+
+		const session = await validateSession(sessionToken);
+		if (!session) {
+			return;
+		}
+
 		return {
-			id: ctx.user.id,
-			username: ctx.user.discordUsername,
+			id: session.id,
+			username: session.discordUsername,
 		};
 	}),
+
 	authorization: authorizationRouter,
+
 	tweet: authorizedProcedure
 		.input(
 			z.object({
@@ -161,6 +155,7 @@ export const appRouter = router({
 			const files = input.files.map((file) => path.join(tmpdir, file));
 			await tweet(input.text, files);
 		}),
+
 	twitterAccount: authorizedProcedure.query(() => {
 		return { username: env.TWITTER_USERNAME };
 	}),
