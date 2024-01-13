@@ -2,6 +2,7 @@ import { z } from "zod";
 import { trpc } from "../trpc";
 import { useForm } from "react-hook-form";
 import twitterText from "twitter-text";
+import { useState } from "react";
 
 const SignedOut = () => {
 	const { data } = trpc.authorization.initialize.useQuery();
@@ -31,19 +32,12 @@ const TweetForm = () => {
 		tweetText: string;
 		files: FileList;
 	}>();
-	const { mutate: tweet, isLoading } = trpc.tweet.useMutation({
-		onSuccess: () => {
-			reset();
-			alert("ツイートしました");
-		},
-		onError: (error) => {
-			console.error(error);
-			alert("ツイートに失敗しました");
-		},
-	});
+	const { mutateAsync: tweet } = trpc.tweet.useMutation();
 
 	const watchTweetText = watch("tweetText");
 	const tweetLength = twitterText.getTweetLength(watchTweetText);
+
+	const [sending, setSending] = useState(false);
 
 	return (
 		<form
@@ -54,14 +48,24 @@ const TweetForm = () => {
 				gap: "8px",
 			}}
 			onSubmit={handleSubmit(async (data) => {
-				const text = data.tweetText;
-				const files = await uploadFile(data.files);
-				tweet({ text, files });
+				try {
+					setSending(true);
+					const text = data.tweetText;
+					const files = await uploadFile(data.files);
+					await tweet({ text, files });
+					alert("ツイートしました");
+					reset();
+				} catch (error) {
+					console.error(error);
+					alert("ツイートに失敗しました");
+				} finally {
+					setSending(false);
+				}
 			})}
 		>
 			<textarea
 				{...register("tweetText")}
-				disabled={isLoading}
+				disabled={sending}
 				style={{
 					height: "200px",
 					width: "360px",
@@ -74,7 +78,7 @@ const TweetForm = () => {
 				multiple
 				{...register("files")}
 			/>
-			<button type="submit" disabled={isLoading} style={{ justifySelf: "end" }}>
+			<button type="submit" disabled={sending} style={{ justifySelf: "end" }}>
 				送信
 			</button>
 		</form>
