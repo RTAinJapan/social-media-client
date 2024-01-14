@@ -117,7 +117,7 @@ export const tweet = async (text: string, files: string[]) => {
 			'div[data-testid="tweetButtonInline"]:not([aria-disabled="true"])'
 		);
 		await tweetButton?.click();
-		await page.waitForNavigation();
+		await page.waitForNetworkIdle();
 	} finally {
 		await page.close();
 	}
