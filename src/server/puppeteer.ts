@@ -118,10 +118,13 @@ export const tweet = async (text: string, files: string[]) => {
 		);
 		await tweetButton?.click();
 		await page.waitForNetworkIdle();
+		console.log("Tweeted:", text);
 	} finally {
 		await page.close();
 	}
 };
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const deleteTweet = async (tweetId: string) => {
 	const page = await browser.newPage();
@@ -131,7 +134,7 @@ export const deleteTweet = async (tweetId: string) => {
 		if (!menu) {
 			throw new Error("No menu");
 		}
-		await new Promise((resolve) => setTimeout(resolve, 500));
+		await sleep(500);
 		await menu.click();
 		const deleteOption = await page.waitForSelector(
 			"div[data-testid=Dropdown] > div:nth-child(1)"
@@ -139,7 +142,7 @@ export const deleteTweet = async (tweetId: string) => {
 		if (!deleteOption) {
 			throw new Error("No delete option");
 		}
-		await new Promise((resolve) => setTimeout(resolve, 500));
+		await sleep(500);
 		await deleteOption.click();
 		const confirmButton = await page.waitForSelector(
 			"div[data-testid=confirmationSheetConfirm]"
@@ -147,9 +150,10 @@ export const deleteTweet = async (tweetId: string) => {
 		if (!confirmButton) {
 			throw new Error("No confirm button");
 		}
-		await new Promise((resolve) => setTimeout(resolve, 500));
+		await sleep(500);
 		await confirmButton.click();
 		await page.waitForNetworkIdle();
+		console.log("Deleted tweet:", tweetId);
 	} finally {
 		await page.close();
 	}
