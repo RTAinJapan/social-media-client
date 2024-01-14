@@ -43,8 +43,6 @@ const TweetForm = () => {
 		<form
 			style={{
 				display: "grid",
-				placeContent: "start",
-				placeItems: "start",
 				gap: "8px",
 			}}
 			onSubmit={handleSubmit(async (data) => {
@@ -68,7 +66,7 @@ const TweetForm = () => {
 				disabled={sending}
 				style={{
 					height: "200px",
-					width: "360px",
+					width: "100%",
 				}}
 			/>
 			<div style={{ justifySelf: "end" }}>{tweetLength}/280</div>
@@ -85,34 +83,78 @@ const TweetForm = () => {
 	);
 };
 
-export const Component = () => {
+const TweetList = () => {
 	const trpcUtils = trpc.useUtils();
+	const { data: tweets } = trpc.getTweets.useQuery();
+	const { mutate: deleteTweet } = trpc.deleteTweet.useMutation({
+		onSuccess: () => {
+			trpcUtils.getTweets.invalidate();
+		},
+	});
+
+	return (
+		<div style={{ display: "grid", gap: "8px" }}>
+			{tweets?.map((tweet) => (
+				<div
+					key={tweet.url}
+					style={{
+						padding: "4px",
+						border: "1px solid black",
+						display: "grid",
+						gap: "4px",
+					}}
+				>
+					<div>{tweet.text}</div>
+					<div
+						style={{
+							display: "grid",
+							gap: "2px",
+							gridAutoFlow: "column",
+							alignItems: "end",
+						}}
+					>
+						<a
+							href={tweet.url}
+							target="_blank"
+							style={{ justifySelf: "start" }}
+						>
+							{new Date(tweet.tweetedAt).toLocaleString()}
+						</a>
+						<button
+							style={{ justifySelf: "end" }}
+							onClick={() => {
+								if (confirm("本当に削除しますか？")) {
+									deleteTweet({ tweetId: tweet.id });
+								}
+							}}
+						>
+							削除
+						</button>
+					</div>
+				</div>
+			))}
+		</div>
+	);
+};
+
+const SignedIn = ({ username }: { username: string }) => {
+	const trpcUtils = trpc.useUtils();
+
 	const { mutate: signOut } = trpc.authorization.signOut.useMutation({
 		onSuccess: () => {
 			trpcUtils.me.invalidate();
 		},
 	});
 
-	const { data: me, isRefetching, isLoading, isError } = trpc.me.useQuery();
-
 	const { data: twitterAccount } = trpc.twitterAccount.useQuery();
-
-	if (isLoading && !isRefetching) {
-		return <div>loading...</div>;
-	}
-
-	if (isError) {
-		return <SignedOut />;
-	}
 
 	return (
 		<div
 			style={{
 				margin: "8px",
 				display: "grid",
-				placeContent: "start",
-				placeItems: "start",
 				gap: "8px",
+				maxWidth: "400px",
 			}}
 		>
 			<div
@@ -122,7 +164,7 @@ export const Component = () => {
 					placeSelf: "stretch",
 				}}
 			>
-				<div>{me?.username}としてログイン中</div>
+				<div>{username}としてログイン中</div>
 				<button
 					onClick={() => {
 						signOut();
@@ -136,6 +178,17 @@ export const Component = () => {
 			</div>
 			<div>{twitterAccount?.username}としてツイートする</div>
 			<TweetForm />
+			<TweetList />
 		</div>
 	);
+};
+
+export const Component = () => {
+	const { data: me, isRefetching, isLoading } = trpc.me.useQuery();
+
+	if (isLoading && !isRefetching) {
+		return <div>loading...</div>;
+	}
+
+	return me ? <SignedIn username={me.username} /> : <SignedOut />;
 };

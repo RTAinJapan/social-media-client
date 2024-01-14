@@ -9,7 +9,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { prisma } from "./prisma.js";
 import ky from "ky";
-import { tweet } from "./puppeteer.js";
+import { deleteTweet, getTweets, tweet } from "./puppeteer.js";
 import * as path from "node:path";
 import { tmpdir } from "./tmpdir.js";
 import { validateSession } from "./validate-session.js";
@@ -128,12 +128,12 @@ export const appRouter = router({
 	me: publicProcedure.query(async ({ ctx }) => {
 		const sessionToken = ctx.req.cookies[SESSION_COOKIE_NAME];
 		if (!sessionToken) {
-			return;
+			return null;
 		}
 
 		const session = await validateSession(sessionToken);
 		if (!session) {
-			return;
+			return null;
 		}
 
 		return {
@@ -154,11 +154,39 @@ export const appRouter = router({
 		.mutation(async ({ input }) => {
 			const files = input.files.map((file) => path.join(tmpdir, file));
 			await tweet(input.text, files);
+			getTweets().catch((error) => {
+				console.error(error);
+			});
 		}),
 
 	twitterAccount: authorizedProcedure.query(() => {
 		return { username: env.TWITTER_USERNAME };
 	}),
+
+	getTweets: authorizedProcedure.query(async () => {
+		const tweets = await prisma.tweets.findMany({
+			orderBy: {
+				tweetedAt: "desc",
+			},
+			take: 5,
+		});
+
+		return tweets.map((tweet) => ({
+			id: tweet.tweetId,
+			url: `https://twitter.com/${env.TWITTER_USERNAME}/status/${tweet.tweetId}`,
+			text: tweet.text,
+			tweetedAt: tweet.tweetedAt.toISOString(),
+		}));
+	}),
+
+	deleteTweet: authorizedProcedure
+		.input(z.object({ tweetId: z.string() }))
+		.mutation(async ({ input }) => {
+			await deleteTweet(input.tweetId);
+			await prisma.tweets.delete({
+				where: { tweetId: input.tweetId },
+			});
+		}),
 });
 
 export type AppRouter = typeof appRouter;
