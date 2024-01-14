@@ -10,7 +10,7 @@ import {
 import { env } from "./env.js";
 import { createContext } from "./trpc.js";
 import { appRouter, type AppRouter } from "./router.js";
-import { getTweets, setupTwitterPage } from "./puppeteer.js";
+import { setupTwitterPage } from "./puppeteer.js";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -76,7 +76,6 @@ server.get("/", async () => {
 });
 
 await setupTwitterPage();
-await getTweets();
 
 const address = await server.listen({
 	host: env.SERVER_HOSTNAME,
