@@ -10,12 +10,8 @@ const browser = await puppeteer.launch({
 	args: env.NODE_ENV === "production" ? ["--no-sandbox"] : [],
 });
 
-const loginPage = await browser.newPage();
-
 export const setupTwitterPage = async () => {
-	if (!twitterPassword) {
-		throw new Error("No twitter password");
-	}
+	const loginPage = await browser.newPage();
 	await loginPage.goto("https://twitter.com/login");
 	const usernameInput = await loginPage.waitForSelector("input[name=text]");
 	await usernameInput?.type(twitterUsername);
@@ -46,6 +42,10 @@ const MAX_TWEETS = 5;
 export const getTweets = async () => {
 	const page = await browser.newPage();
 	try {
+		await page.setViewport({
+			width: 1920,
+			height: 1080,
+		});
 		await page.goto(`https://twitter.com/${twitterUsername}`);
 		const tweetsSelector = Array.from({ length: MAX_TWEETS })
 			.map(() => "div[data-testid=cellInnerDiv]")
