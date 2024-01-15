@@ -10,6 +10,8 @@ const browser = await puppeteer.launch({
 	args: env.NODE_ENV === "production" ? ["--no-sandbox"] : [],
 });
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const setupTwitterPage = async () => {
 	const loginPage = await browser.newPage();
 	await loginPage.goto("https://twitter.com/login");
@@ -106,25 +108,33 @@ export const tweet = async (text: string, files: string[]) => {
 		page.goto("https://twitter.com/");
 		if (files.length >= 1) {
 			const fileInput = await page.waitForSelector("input[type=file]");
-			await fileInput?.uploadFile(...files);
+			if (!fileInput) {
+				throw new Error("No file input");
+			}
+			await fileInput.uploadFile(...files);
 		}
 		const label = await page.waitForSelector(
 			'label[data-testid="tweetTextarea_0_label"]'
 		);
-		await label?.click({ count: 3 });
-		await label?.type(text);
+		if (!label) {
+			throw new Error("No tweet input label");
+		}
+		await label.click({ count: 3 });
+		await label.type(text);
 		const tweetButton = await page.waitForSelector(
 			'div[data-testid="tweetButtonInline"]:not([aria-disabled="true"])'
 		);
-		await tweetButton?.click();
+		if (!tweetButton) {
+			throw new Error("No tweet button");
+		}
+		await tweetButton.click();
+		await sleep(500);
 		await page.waitForNetworkIdle();
 		console.log("Tweeted:", text);
 	} finally {
 		await page.close();
 	}
 };
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const deleteTweet = async (tweetId: string) => {
 	const page = await browser.newPage();
@@ -134,24 +144,24 @@ export const deleteTweet = async (tweetId: string) => {
 		if (!menu) {
 			throw new Error("No menu");
 		}
-		await sleep(500);
 		await menu.click();
+		await sleep(500);
 		const deleteOption = await page.waitForSelector(
 			"div[data-testid=Dropdown] > div:nth-child(1)"
 		);
 		if (!deleteOption) {
 			throw new Error("No delete option");
 		}
-		await sleep(500);
 		await deleteOption.click();
+		await sleep(500);
 		const confirmButton = await page.waitForSelector(
 			"div[data-testid=confirmationSheetConfirm]"
 		);
 		if (!confirmButton) {
 			throw new Error("No confirm button");
 		}
-		await sleep(500);
 		await confirmButton.click();
+		await sleep(500);
 		await page.waitForNetworkIdle();
 		console.log("Deleted tweet:", tweetId);
 	} finally {
