@@ -9,7 +9,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { prisma } from "./prisma.js";
 import ky from "ky";
-import { deleteTweet, getTweets, tweet } from "./puppeteer.js";
+import { deleteTweet, getTweets, sendReply, tweet } from "./puppeteer.js";
 import * as path from "node:path";
 import { tmpdir } from "./tmpdir.js";
 import { validateSession } from "./validate-session.js";
@@ -168,7 +168,7 @@ export const appRouter = router({
 			orderBy: {
 				tweetedAt: "desc",
 			},
-			take: 5,
+			take: 10,
 		});
 
 		return tweets.map((tweet) => ({
@@ -185,6 +185,25 @@ export const appRouter = router({
 			await deleteTweet(input.tweetId);
 			await prisma.tweets.delete({
 				where: { tweetId: input.tweetId },
+			});
+		}),
+
+	sendReply: authorizedProcedure
+		.input(
+			z.object({
+				tweetId: z.string(),
+				text: z.string(),
+				files: z.array(z.string()),
+			})
+		)
+		.mutation(async ({ input }) => {
+			await sendReply(
+				input.tweetId,
+				input.text,
+				input.files.map((file) => path.join(tmpdir, file))
+			);
+			getTweets().catch((error) => {
+				console.error(error);
 			});
 		}),
 });

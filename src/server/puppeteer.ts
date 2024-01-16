@@ -49,11 +49,8 @@ export const getTweets = async () => {
 			height: 1080,
 		});
 		await page.goto(`https://twitter.com/${twitterUsername}`);
-		const tweetsSelector = Array.from({ length: MAX_TWEETS })
-			.map(() => "div[data-testid=cellInnerDiv]")
-			.join(" + ");
-		await page.waitForSelector(tweetsSelector);
-		const tweets = await page.$$("div[data-testid=cellInnerDiv]");
+		await page.waitForSelector("article[data-testid=tweet]");
+		const tweets = await page.$$("article[data-testid=tweet]");
 		await Promise.all(
 			tweets.slice(0, MAX_TWEETS).map(async (tweetElement) => {
 				const textElement = await tweetElement.waitForSelector(
@@ -130,7 +127,6 @@ export const tweet = async (text: string, files: string[]) => {
 		await tweetButton.click();
 		await sleep(500);
 		await page.waitForNetworkIdle();
-		console.log("Tweeted:", text);
 	} finally {
 		await page.close();
 	}
@@ -163,7 +159,54 @@ export const deleteTweet = async (tweetId: string) => {
 		await confirmButton.click();
 		await sleep(500);
 		await page.waitForNetworkIdle();
-		console.log("Deleted tweet:", tweetId);
+	} finally {
+		await page.close();
+	}
+};
+
+export const sendReply = async (
+	tweetId: string,
+	text: string,
+	files: string[]
+) => {
+	const page = await browser.newPage();
+	try {
+		await page.goto(`https://twitter.com/${twitterUsername}/status/${tweetId}`);
+		const replyButton = await page.waitForSelector(
+			"div[data-testid=reply]:not([aria-disabled=true])"
+		);
+		if (!replyButton) {
+			throw new Error("No reply button");
+		}
+		await replyButton.click();
+		await sleep(500);
+
+		if (files.length >= 1) {
+			const fileInput = await page.waitForSelector("input[type=file]");
+			if (!fileInput) {
+				throw new Error("No file input");
+			}
+			await fileInput.uploadFile(...files);
+		}
+
+		const label = await page.waitForSelector(
+			'label[data-testid="tweetTextarea_0_label"]'
+		);
+		if (!label) {
+			throw new Error("No tweet input label");
+		}
+		await label.click({ count: 3 });
+		await label.type(text);
+		const tweetButton = await page.waitForSelector(
+			'div[data-testid="tweetButton"]:not([aria-disabled="true"])'
+		);
+		if (!tweetButton) {
+			throw new Error("No tweet button");
+		}
+		await tweetButton.click();
+		await sleep(500);
+
+		await page.waitForNetworkIdle();
 	} finally {
 		await page.close();
 	}

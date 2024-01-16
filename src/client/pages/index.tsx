@@ -3,6 +3,7 @@ import { trpc } from "../trpc";
 import { useForm } from "react-hook-form";
 import twitterText from "twitter-text";
 import { useState } from "react";
+import { useReplyStore } from "../stores/reply";
 
 const SignedOut = () => {
 	const { data } = trpc.authorization.initialize.useQuery();
@@ -33,11 +34,15 @@ const TweetForm = () => {
 		files: FileList;
 	}>();
 	const { mutateAsync: tweet } = trpc.tweet.useMutation();
+	const { mutateAsync: sendReply } = trpc.sendReply.useMutation();
 
 	const watchTweetText = watch("tweetText");
 	const tweetLength = twitterText.getTweetLength(watchTweetText);
 
 	const [sending, setSending] = useState(false);
+
+	const reply = useReplyStore((store) => store.reply);
+	const clearReply = useReplyStore((store) => store.clearReply);
 
 	return (
 		<form
@@ -50,9 +55,14 @@ const TweetForm = () => {
 					setSending(true);
 					const text = data.tweetText;
 					const files = await uploadFile(data.files);
-					await tweet({ text, files });
+					if (reply) {
+						await sendReply({ tweetId: reply, text, files });
+					} else {
+						await tweet({ text, files });
+					}
 					alert("ツイートしました");
 					reset();
+					clearReply();
 				} catch (error) {
 					console.error(error);
 					alert("ツイートに失敗しました");
@@ -61,6 +71,31 @@ const TweetForm = () => {
 				}
 			})}
 		>
+			{reply && (
+				<div
+					style={{
+						color: "red",
+						display: "grid",
+						gap: "8px",
+						gridTemplateColumns: "1fr auto",
+						alignItems: "center",
+					}}
+				>
+					<div>
+						<a href={`https://twitter.com/x/status/${reply}`} target="_blank">
+							ツイート
+						</a>
+						へのリプライとしてツイートする
+					</div>
+					<button
+						onClick={() => {
+							clearReply();
+						}}
+					>
+						クリア
+					</button>
+				</div>
+			)}
 			<textarea
 				{...register("tweetText")}
 				disabled={sending}
@@ -91,6 +126,8 @@ const TweetList = () => {
 			trpcUtils.getTweets.invalidate();
 		},
 	});
+	const setReply = useReplyStore((store) => store.setReply);
+	const reply = useReplyStore((store) => store.reply);
 
 	return (
 		<div style={{ display: "grid", gap: "8px" }}>
@@ -99,7 +136,7 @@ const TweetList = () => {
 					key={tweet.url}
 					style={{
 						padding: "4px",
-						border: "1px solid black",
+						border: reply === tweet.id ? "2px solid red" : "1px solid black",
 						display: "grid",
 						gap: "4px",
 					}}
@@ -111,17 +148,21 @@ const TweetList = () => {
 							gap: "2px",
 							gridAutoFlow: "column",
 							alignItems: "end",
+							gridTemplateColumns: "1fr auto auto",
+							justifyItems: "start",
 						}}
 					>
-						<a
-							href={tweet.url}
-							target="_blank"
-							style={{ justifySelf: "start" }}
-						>
+						<a href={tweet.url} target="_blank">
 							{new Date(tweet.tweetedAt).toLocaleString()}
 						</a>
 						<button
-							style={{ justifySelf: "end" }}
+							onClick={() => {
+								setReply(tweet.id);
+							}}
+						>
+							リプライ
+						</button>
+						<button
 							onClick={() => {
 								if (confirm("本当に削除しますか？")) {
 									deleteTweet({ tweetId: tweet.id });
