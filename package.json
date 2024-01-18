@@ -4,7 +4,7 @@
 	"scripts": {
 		"dev": "run-p --race dev:*",
 		"dev:client": "vite",
-		"dev:server": "onchange src/server -ik -- node --env-file=.env.local --import=tsx/esm src/server/main.ts",
+		"dev:server": "onchange -ik \"src/server/**/*.ts\" -- node --env-file=.env.local --import=tsx/esm src/server/main.ts",
 		"dev:types": "tsc --noEmit --watch --preserveWatchOutput -p src/server",
 		"build": "run-s build:*",
 		"build:client": "vite build",
