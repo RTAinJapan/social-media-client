@@ -203,9 +203,7 @@ export const sendReply = async (
 			throw new Error("No tweet button");
 		}
 		await tweetButton.click();
-		await sleep(500);
-
-		await page.waitForNetworkIdle();
+		await page.waitForSelector('div[data-testid="toast');
 	} finally {
 		await page.close();
 	}
