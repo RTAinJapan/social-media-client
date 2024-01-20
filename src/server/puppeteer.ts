@@ -124,8 +124,8 @@ export const tweet = async (text: string, files: string[]) => {
 		if (!tweetButton) {
 			throw new Error("No tweet button");
 		}
-		await tweetButton.click();
-		await page.waitForSelector('div[data-testid="toast');
+		await tweetButton.click({ count: 2 });
+		await page.waitForSelector("div[data-testid=toast]");
 	} finally {
 		await page.close();
 	}
@@ -202,8 +202,8 @@ export const sendReply = async (
 		if (!tweetButton) {
 			throw new Error("No tweet button");
 		}
-		await tweetButton.click();
-		await page.waitForSelector('div[data-testid="toast');
+		await tweetButton.click({ count: 2 });
+		await page.waitForSelector("div[data-testid=toast]");
 	} finally {
 		await page.close();
 	}
