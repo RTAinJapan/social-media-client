@@ -1,4 +1,4 @@
-import { prisma } from "./prisma.js";
+import { prisma } from "./prisma.server.js";
 
 export const validateSession = async (sessiontoken: string) => {
 	const session = await prisma.session.findUnique({

@@ -1,13 +1,11 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { vitePlugin as remix } from "@remix-run/dev";
 
 export default defineConfig({
-	root: "src/client",
-	envDir: "../..",
-	build: {
-		outDir: "../../dist",
-		emptyOutDir: true,
-	},
-	plugins: [react()],
+	plugins: [
+		remix({
+			appDirectory: "src/app",
+		}),
+	],
 	clearScreen: false,
 });

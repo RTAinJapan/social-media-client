@@ -1,81 +1,52 @@
 import fastify from "fastify";
 import cookie from "@fastify/cookie";
 import helmet from "@fastify/helmet";
-import cors from "@fastify/cors";
-import multipart from "@fastify/multipart";
+import { env } from "../lib/env.server.js";
 import {
-	fastifyTRPCPlugin,
-	type FastifyTRPCPluginOptions,
-} from "@trpc/server/adapters/fastify";
-import { env } from "./env.js";
-import { createContext } from "./trpc.js";
-import { appRouter, type AppRouter } from "./router.js";
-import { setupTwitterPage } from "./puppeteer.js";
-import * as path from "node:path";
-import * as fs from "node:fs";
-import { randomUUID } from "node:crypto";
-import { pipeline } from "node:stream/promises";
-import { SESSION_COOKIE_NAME } from "./constant.js";
-import { validateSession } from "./validate-session.js";
-import { tmpdir } from "./tmpdir.js";
+	createRequestHandler,
+	type RequestHandler,
+} from "@mcansh/remix-fastify";
 
 const server = fastify({
 	maxParamLength: 5000,
 	bodyLimit: 10_000_000,
 });
 
-await server.register(cors, {
-	origin: [env.CLIENT_ORIGIN],
-	credentials: true,
-});
-
 await server.register(helmet, {
 	hsts: env.NODE_ENV === "production",
+	contentSecurityPolicy: false,
 });
 
 await server.register(cookie);
 
-await server.register(fastifyTRPCPlugin, {
-	prefix: "/trpc",
-	trpcOptions: {
-		createContext,
-		router: appRouter,
-	},
-} satisfies FastifyTRPCPluginOptions<AppRouter>);
+let handler: RequestHandler<typeof server.server>;
 
-await server.register(multipart);
+if (env.NODE_ENV === "production") {
+	handler = createRequestHandler({
+		// @ts-expect-error - this is fine
+		build: await import("../../build/server/index.js"),
+	});
+} else {
+	const vite = await import("vite");
+	const devServer = await vite.createServer({
+		server: { middlewareMode: true },
+	});
+	const { default: middie } = await import("@fastify/middie");
+	await server.register(middie);
+	await server.use(devServer.middlewares);
 
-server.post("/file", async (req, res) => {
-	const sessionToken = req.cookies[SESSION_COOKIE_NAME];
-	if (!sessionToken) {
-		res.status(401);
-		return;
-	}
-	const user = await validateSession(sessionToken);
-	if (!user) {
-		res.status(401);
-		return;
-	}
+	handler = createRequestHandler({
+		build: (() => devServer.ssrLoadModule("virtual:remix/server-build")) as any,
+	});
+}
 
-	const filenames: string[] = [];
-	for await (const data of req.files()) {
-		const extension = path.extname(data.filename);
-		const filename = randomUUID() + extension;
-		const filepath = path.join(tmpdir, filename);
-		const stream = fs.createWriteStream(filepath);
-		await pipeline(data.file, stream);
-		filenames.push(filename);
-	}
-
-	res.send(filenames);
+await server.register(async (childServer) => {
+	childServer.removeAllContentTypeParsers();
+	childServer.addContentTypeParser("*", (_request, payload, done) => {
+		done(null, payload);
+	});
+	childServer.all("*", handler);
 });
-
-// Healthcheck endpoint
-server.get("/", async () => {
-	return { ok: true };
-});
-
-await setupTwitterPage();
 
 const address = await server.listen({
 	host: env.SERVER_HOSTNAME,

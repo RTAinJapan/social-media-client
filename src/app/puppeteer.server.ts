@@ -1,20 +1,25 @@
 import puppeteer from "puppeteer";
-import { env } from "./env.js";
-import { prisma } from "./prisma.js";
+import { env } from "../lib/env.server.js";
+import { prisma } from "./prisma.server.js";
 
 const twitterUsername = env.TWITTER_USERNAME;
 const twitterPassword = env.TWITTER_PASSWORD;
 
 const browser = await puppeteer.launch({
-	headless: env.NODE_ENV === "production" ? "new" : false,
+	headless: "new",
 	args: env.NODE_ENV === "production" ? ["--no-sandbox"] : [],
 });
 
+const chromeUserAgent =
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const setupTwitterPage = async () => {
+{
 	const loginPage = await browser.newPage();
+	await loginPage.setUserAgent(chromeUserAgent);
 	await loginPage.goto("https://twitter.com/login");
+	await loginPage.waitForNetworkIdle();
 	const usernameInput = await loginPage.waitForSelector("input[name=text]");
 	await usernameInput?.type(twitterUsername);
 	const nextSpans = await loginPage.$$("span");
@@ -37,12 +42,13 @@ export const setupTwitterPage = async () => {
 	}
 	await loginPage.waitForNavigation();
 	await loginPage.close();
-};
+}
 
 const MAX_TWEETS = 5;
 
 export const getTweets = async () => {
 	const page = await browser.newPage();
+	await page.setUserAgent(chromeUserAgent);
 	try {
 		await page.setViewport({
 			width: 1920,
@@ -59,23 +65,32 @@ export const getTweets = async () => {
 				if (!textElement) {
 					return;
 				}
-				const text: string = await textElement.evaluate((el) => el.textContent);
+				const text = await textElement.evaluate((el) => el.textContent);
+				if (!text) {
+					return;
+				}
 				const timeElement = await tweetElement.waitForSelector("time");
 				if (!timeElement) {
 					return;
 				}
-				const time: string = await timeElement.evaluate((el) =>
+				const time = await timeElement.evaluate((el) =>
 					el.getAttribute("datetime")
 				);
+				if (!time) {
+					return;
+				}
 				const linkElement = await tweetElement.waitForSelector(
 					"a[href*='/status/']"
 				);
 				if (!linkElement) {
 					return;
 				}
-				const link: string = await linkElement.evaluate((el) =>
+				const link = await linkElement.evaluate((el) =>
 					el.getAttribute("href")
 				);
+				if (!link) {
+					return;
+				}
 				const id = link.split("/").pop()!;
 				const tweetText = text.replace(/\n/g, " ");
 				const tweetTime = new Date(time);
@@ -101,6 +116,7 @@ export const getTweets = async () => {
 
 export const tweet = async (text: string, files: string[]) => {
 	const page = await browser.newPage();
+	await page.setUserAgent(chromeUserAgent);
 	try {
 		page.goto("https://twitter.com/");
 		if (files.length >= 1) {
@@ -133,6 +149,7 @@ export const tweet = async (text: string, files: string[]) => {
 
 export const deleteTweet = async (tweetId: string) => {
 	const page = await browser.newPage();
+	await page.setUserAgent(chromeUserAgent);
 	try {
 		await page.goto(`https://twitter.com/${twitterUsername}/status/${tweetId}`);
 		const menu = await page.waitForSelector("div[data-testid=caret]");
@@ -169,6 +186,7 @@ export const sendReply = async (
 	files: string[]
 ) => {
 	const page = await browser.newPage();
+	await page.setUserAgent(chromeUserAgent);
 	try {
 		await page.goto(`https://twitter.com/${twitterUsername}/status/${tweetId}`);
 		const replyButton = await page.waitForSelector(
