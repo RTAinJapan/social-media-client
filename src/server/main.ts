@@ -1,6 +1,5 @@
 import fastify from "fastify";
 import helmet from "@fastify/helmet";
-import { env } from "../lib/env.server.js";
 import {
 	createRequestHandler,
 	type RequestHandler,
@@ -14,13 +13,13 @@ const server = fastify({
 });
 
 await server.register(helmet, {
-	hsts: env.NODE_ENV === "production",
+	hsts: process.env.NODE_ENV === "production",
 	contentSecurityPolicy: false,
 });
 
 let handler: RequestHandler<typeof server.server>;
 
-if (env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "production") {
 	await server.register(fastifyStatic, {
 		root: path.join(import.meta.dirname, "../build/client/assets"),
 		prefix: "/assets",
@@ -57,8 +56,8 @@ await server.register(async (childServer) => {
 });
 
 const address = await server.listen({
-	host: env.SERVER_HOSTNAME,
-	port: env.SERVER_PORT,
+	host: process.env["SERVER_HOSTNAME"],
+	port: parseInt(process.env["SERVER_PORT"] ?? "3000"),
 });
 
 console.log(`server listening on ${address}`);

@@ -6,8 +6,6 @@ const envSchema = z.object({
 
 	NODE_ENV: z.enum(["development", "production"]).default("development"),
 
-	SERVER_PORT: z.coerce.number().default(3000),
-	SERVER_HOSTNAME: z.string().default("localhost"),
 	SERVER_ORIGIN: z.string().default("http://localhost:3000"),
 
 	DISCORD_SERVER_ID: z.string(),

@@ -1,6 +1,6 @@
 import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { discordOauthStateCookie, sessionCookie } from "../cookies.server";
-import { env } from "../../lib/env.server";
+import { env } from "../env.server";
 import ky from "ky";
 import { randomBytes } from "node:crypto";
 import { prisma } from "../prisma.server";

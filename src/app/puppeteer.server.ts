@@ -1,5 +1,5 @@
 import puppeteer from "puppeteer";
-import { env } from "../lib/env.server.js";
+import { env } from "./env.server.js";
 import { prisma } from "./prisma.server.js";
 
 const twitterUsername = env.TWITTER_USERNAME;

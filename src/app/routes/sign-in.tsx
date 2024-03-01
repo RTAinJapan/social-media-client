@@ -1,6 +1,6 @@
 import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { discordOauthStateCookie } from "../cookies.server";
-import { env } from "../../lib/env.server";
+import { env } from "../env.server";
 import { randomBytes } from "crypto";
 import { parseSession } from "../session.server";
 

@@ -4,7 +4,7 @@ import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useFetcher, useLoaderData } from "@remix-run/react";
 import { assertSession } from "../session.server";
 import { prisma } from "../prisma.server";
-import { env } from "../../lib/env.server";
+import { env } from "../env.server";
 import { useEffect, useState } from "react";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
