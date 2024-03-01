@@ -13,7 +13,7 @@ COPY prisma prisma
 RUN npx prisma generate
 COPY src src
 COPY tsconfig.json vite.config.ts ./
-RUN npm run build:server
+RUN npm run build
 
 
 FROM base
@@ -65,7 +65,8 @@ COPY --from=build /app/prisma prisma
 COPY --from=build /app/node_modules/.prisma node_modules/.prisma
 COPY --from=build /app/node_modules/@prisma/client node_modules/@prisma/client
 COPY --from=build /app/build build
+COPY --from=build /app/out out
 
 ENV NODE_ENV=production
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node --enable-source-maps build/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node --enable-source-maps out/main.js"]

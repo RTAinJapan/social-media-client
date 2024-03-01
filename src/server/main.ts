@@ -1,11 +1,12 @@
 import fastify from "fastify";
-import cookie from "@fastify/cookie";
 import helmet from "@fastify/helmet";
 import { env } from "../lib/env.server.js";
 import {
 	createRequestHandler,
 	type RequestHandler,
 } from "@mcansh/remix-fastify";
+import { fastifyStatic } from "@fastify/static";
+import * as path from "path";
 
 const server = fastify({
 	maxParamLength: 5000,
@@ -17,11 +18,18 @@ await server.register(helmet, {
 	contentSecurityPolicy: false,
 });
 
-await server.register(cookie);
-
 let handler: RequestHandler<typeof server.server>;
 
 if (env.NODE_ENV === "production") {
+	await server.register(fastifyStatic, {
+		root: path.join(import.meta.dirname, "../build/client/assets"),
+		prefix: "/assets",
+		cacheControl: true,
+		maxAge: "1y",
+		immutable: true,
+		lastModified: true,
+	});
+
 	handler = createRequestHandler({
 		// @ts-expect-error - this is fine
 		build: await import("../../build/server/index.js"),

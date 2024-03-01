@@ -6,7 +6,7 @@ const twitterUsername = env.TWITTER_USERNAME;
 const twitterPassword = env.TWITTER_PASSWORD;
 
 const browser = await puppeteer.launch({
-	headless: "new",
+	headless: true,
 	args: env.NODE_ENV === "production" ? ["--no-sandbox"] : [],
 });
 

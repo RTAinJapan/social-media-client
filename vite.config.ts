@@ -7,5 +7,8 @@ export default defineConfig({
 			appDirectory: "src/app",
 		}),
 	],
+	build: {
+		target: ["chrome120", "node20"],
+	},
 	clearScreen: false,
 });
