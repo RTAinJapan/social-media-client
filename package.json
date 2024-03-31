@@ -2,11 +2,10 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"prepare": "panda codegen",
-		"dev": "run-p --race dev:*",
+		"dev": "panda codegen && run-p --race dev:*",
 		"dev:types": "tsc --noEmit --watch --preserveWatchOutput",
 		"dev:server": "onchange -ik src/server -- tsx --env-file=.env.local src/server/main.ts",
-		"build": "run-s build:*",
+		"build": "panda codegen && run-s build:*",
 		"build:types": "tsc --noEmit",
 		"build:remix": "remix vite:build",
 		"build:server": "esbuild src/server/main.ts --bundle --format=esm --sourcemap --platform=node --target=node20 --outdir=out --packages=external --external:./build/server/index.js"
