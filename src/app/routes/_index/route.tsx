@@ -88,36 +88,42 @@ const actionSchema = zfd.formData({
 export const action = async ({ request }: ActionFunctionArgs) => {
 	await assertSession(request);
 
-	const formData = await unstable_parseMultipartFormData(
-		request,
-		unstable_composeUploadHandlers(
-			unstable_createFileUploadHandler({
-				maxPartSize: 10_000_000,
-				directory: tmpDir,
-			}),
-			unstable_createMemoryUploadHandler()
-		)
-	);
+	try {
+		const formData = await unstable_parseMultipartFormData(
+			request,
+			unstable_composeUploadHandlers(
+				unstable_createFileUploadHandler({
+					maxPartSize: 100_000_000,
+					directory: tmpDir,
+				}),
+				unstable_createMemoryUploadHandler()
+			)
+		);
 
-	const { text, replyToTweetId } = actionSchema.parse(formData);
+		const { text, replyToTweetId } = actionSchema.parse(formData);
 
-	const files = formData.getAll("files");
-	const filePaths: string[] = [];
-	for (const file of files) {
-		if (file instanceof NodeOnDiskFile) {
-			filePaths.push(file.getFilePath());
+		const files = formData.getAll("files");
+		const filePaths: string[] = [];
+		for (const file of files) {
+			if (file instanceof NodeOnDiskFile) {
+				filePaths.push(file.getFilePath());
+			}
 		}
-	}
 
-	if (replyToTweetId) {
-		await sendReply(replyToTweetId, text ?? "", filePaths);
-	} else {
-		await tweet(text ?? "", filePaths);
-	}
+		if (replyToTweetId) {
+			await sendReply(replyToTweetId, text ?? "", filePaths);
+		} else {
+			await tweet(text ?? "", filePaths);
+		}
 
-	await getTweets().catch((error) => {
+		await getTweets().catch((error) => {
+			console.error(error);
+		});
+
+		return json({ ok: true, data: text } as const);
+	} catch (error) {
 		console.error(error);
-	});
-
-	return json({});
+		const message = error instanceof Error ? error.message : String(error);
+		return json({ ok: false, error: message } as const, { status: 500 });
+	}
 };

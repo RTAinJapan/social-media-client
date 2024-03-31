@@ -1,6 +1,6 @@
 import { useReplyStore } from "../../stores/reply";
 import { useFetcher, useLoaderData } from "@remix-run/react";
-import { Button } from "@radix-ui/themes";
+import { Button, Link } from "@radix-ui/themes";
 import type { loader } from "./route";
 import { css } from "../../../../styled-system/css";
 
@@ -53,9 +53,9 @@ export const TweetList = () => {
 							justifyItems: "start",
 						})}
 					>
-						<a href={tweet.url} target="_blank">
+						<Link href={tweet.url} target="_blank">
 							{new Date(tweet.tweetedAt).toLocaleString()}
-						</a>
+						</Link>
 						<Button
 							onClick={() => {
 								setReply(tweet.id);

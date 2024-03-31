@@ -9,7 +9,7 @@ import * as path from "path";
 
 const server = fastify({
 	maxParamLength: 5000,
-	bodyLimit: 10_000_000,
+	bodyLimit: 100_000_000,
 });
 
 await server.register(helmet, {

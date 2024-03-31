@@ -9,6 +9,8 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
+	isRouteErrorResponse,
+	useRouteError,
 } from "@remix-run/react";
 
 export const meta: MetaFunction = () => [
@@ -34,5 +36,20 @@ export default () => {
 				<Scripts />
 			</body>
 		</html>
+	);
+};
+
+export const ErrorBoundary = () => {
+	const error = useRouteError();
+
+	if (!isRouteErrorResponse(error)) {
+		return <div>Something went wrong</div>;
+	}
+
+	return (
+		<div>
+			<h1>{error.status}</h1>
+			<p>{error.statusText}</p>
+		</div>
 	);
 };

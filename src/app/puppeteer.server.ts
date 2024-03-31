@@ -6,8 +6,12 @@ const twitterUsername = env.TWITTER_USERNAME;
 const twitterPassword = env.TWITTER_PASSWORD;
 
 const browser = await puppeteer.launch({
-	headless: true,
+	headless: false,
 	args: env.NODE_ENV === "production" ? ["--no-sandbox"] : [],
+	defaultViewport: {
+		width: 1920,
+		height: 1080,
+	},
 });
 
 const chromeUserAgent =
@@ -119,13 +123,7 @@ export const tweet = async (text: string, files: string[]) => {
 	await page.setUserAgent(chromeUserAgent);
 	try {
 		page.goto("https://twitter.com/");
-		if (files.length >= 1) {
-			const fileInput = await page.waitForSelector("input[type=file]");
-			if (!fileInput) {
-				throw new Error("No file input");
-			}
-			await fileInput.uploadFile(...files);
-		}
+
 		const label = await page.waitForSelector(
 			'label[data-testid="tweetTextarea_0_label"]'
 		);
@@ -134,6 +132,16 @@ export const tweet = async (text: string, files: string[]) => {
 		}
 		await label.click({ count: 3 });
 		await label.type(text);
+
+		if (files.length >= 1) {
+			const fileInput = await page.waitForSelector("input[type=file]");
+			if (!fileInput) {
+				throw new Error("No file input");
+			}
+			await fileInput.uploadFile(...files);
+			await page.waitForSelector('div[data-testid="attachments"]');
+		}
+
 		const tweetButton = await page.waitForSelector(
 			'div[data-testid="tweetButtonInline"]:not([aria-disabled="true"])'
 		);

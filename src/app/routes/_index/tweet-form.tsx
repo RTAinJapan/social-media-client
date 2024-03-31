@@ -1,11 +1,15 @@
 import { useReplyStore } from "../../stores/reply";
 import { useFetcher } from "@remix-run/react";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Button, Link, TextArea } from "@radix-ui/themes";
 import twitterText from "twitter-text";
 import { css } from "../../../../styled-system/css";
+import type { action } from "./route";
 
-const TweetTextInput = () => {
+const imageFileTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const videoFileTypes = ["video/mp4", "video/quicktime"];
+
+const TweetTextInput = ({ disabled }: { disabled: boolean }) => {
 	const [tweetLength, setTweetLength] = useState(0);
 	return (
 		<>
@@ -14,6 +18,7 @@ const TweetTextInput = () => {
 				onChange={(e) => {
 					setTweetLength(twitterText.getTweetLength(e.target.value));
 				}}
+				disabled={disabled}
 				className={css({ height: "200px", width: "100%" })}
 			/>
 			<div className={css({ justifySelf: "end" })}>{tweetLength}/280</div>
@@ -35,7 +40,7 @@ const ImageFileInput = () => {
 					name="files"
 					type="file"
 					hidden
-					accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime"
+					accept={[...imageFileTypes, ...videoFileTypes].join(",")}
 					multiple
 					id={inputId}
 					onChange={(e) => {
@@ -46,18 +51,27 @@ const ImageFileInput = () => {
 			<div
 				className={css({
 					display: "grid",
-					gridTemplateColumns: "repeat(2, 1fr)",
-					gridTemplateRows: "repeat(2, 1fr)",
+					gridTemplateColumns: "repeat(2, auto)",
+					gridTemplateRows: "repeat(2, auto)",
 					gap: "4px",
 				})}
 			>
-				{files?.map((file) => (
-					<img
-						key={file.name}
-						src={URL.createObjectURL(file)}
-						alt={file.name}
-					/>
-				))}
+				{files?.map((file) =>
+					imageFileTypes.includes(file.type) ? (
+						<img
+							key={file.name}
+							src={URL.createObjectURL(file)}
+							alt={file.name}
+						/>
+					) : (
+						<video
+							key={file.name}
+							src={URL.createObjectURL(file)}
+							controls
+							muted
+						/>
+					)
+				)}
 			</div>
 		</div>
 	);
@@ -100,8 +114,22 @@ const ReplyDisplay = () => {
 };
 
 export const TweetForm = () => {
-	const fetcher = useFetcher();
+	const fetcher = useFetcher<typeof action>();
 	const sending = fetcher.state === "submitting";
+	const [formKey, setFormKey] = useState(0);
+	const clearReply = useReplyStore((store) => store.clearReply);
+
+	useEffect(() => {
+		if (fetcher.state === "loading") {
+			if (fetcher.data?.ok) {
+				alert(`ツイートしました: ${fetcher.data.data}`);
+				setFormKey((n) => n + 1);
+				clearReply();
+			} else {
+				alert(`ツイートに失敗しました: ${fetcher.data?.error}`);
+			}
+		}
+	}, [fetcher.state]);
 
 	return (
 		<fetcher.Form
@@ -111,9 +139,10 @@ export const TweetForm = () => {
 				display: "grid",
 				gap: "8px",
 			})}
+			key={formKey}
 		>
 			<ReplyDisplay />
-			<TweetTextInput />
+			<TweetTextInput disabled={sending} />
 			<ImageFileInput />
 			<Button
 				type="submit"
