@@ -1,4 +1,6 @@
-import "modern-normalize";
+import "./index.css";
+
+import { Theme } from "@radix-ui/themes";
 
 import type { MetaFunction, LinksFunction } from "@remix-run/node";
 import {
@@ -25,7 +27,9 @@ export default () => {
 				<Links />
 			</head>
 			<body>
-				<Outlet />
+				<Theme>
+					<Outlet />
+				</Theme>
 				<ScrollRestoration />
 				<Scripts />
 			</body>

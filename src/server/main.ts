@@ -56,7 +56,7 @@ await server.register(async (childServer) => {
 });
 
 const address = await server.listen({
-	host: process.env["SERVER_HOSTNAME"],
+	host: process.env["SERVER_HOSTNAME"] ?? "localhost",
 	port: parseInt(process.env["SERVER_PORT"] ?? "3000"),
 });
 

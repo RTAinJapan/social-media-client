@@ -1,0 +1,3 @@
+@layer reset, base, tokens, recipes, radix, utilities;
+
+@import "@radix-ui/themes/styles.css" layer(radix);

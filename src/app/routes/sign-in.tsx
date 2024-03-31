@@ -3,16 +3,37 @@ import { discordOauthStateCookie } from "../cookies.server";
 import { env } from "../env.server";
 import { randomBytes } from "crypto";
 import { parseSession } from "../session.server";
+import { Button } from "@radix-ui/themes";
+import { Form } from "@remix-run/react";
+import { css } from "../../../styled-system/css";
 
 const discordOauthRedirectUrl = new URL("/validate-oauth", env.SERVER_ORIGIN);
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const session = await parseSession(request);
-
 	if (session) {
 		throw redirect("/");
 	}
+	return null;
+};
 
+export default () => {
+	return (
+		<Form
+			method="post"
+			className={css({
+				width: "100vw",
+				height: "100vh",
+				display: "grid",
+				placeItems: "center",
+			})}
+		>
+			<Button type="submit">Sign in with Discord</Button>
+		</Form>
+	);
+};
+
+export const action = async () => {
 	const state = randomBytes(100).toString("base64url");
 
 	const url = new URL("https://discord.com/oauth2/authorize");
