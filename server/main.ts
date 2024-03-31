@@ -31,7 +31,7 @@ if (process.env.NODE_ENV === "production") {
 
 	handler = createRequestHandler({
 		// @ts-expect-error - this is fine
-		build: await import("../../build/server/index.js"),
+		build: await import("../build/server/index.js"),
 	});
 } else {
 	const vite = await import("vite");

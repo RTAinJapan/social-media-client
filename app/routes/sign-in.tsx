@@ -5,7 +5,7 @@ import { randomBytes } from "crypto";
 import { parseSession } from "../session.server";
 import { Button } from "@radix-ui/themes";
 import { Form } from "@remix-run/react";
-import { css } from "../../../styled-system/css";
+import { css } from "../../styled-system/css";
 
 const discordOauthRedirectUrl = new URL("/validate-oauth", env.SERVER_ORIGIN);
 

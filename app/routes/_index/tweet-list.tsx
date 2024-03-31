@@ -2,7 +2,7 @@ import { useReplyStore } from "../../stores/reply";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import { Button, Link } from "@radix-ui/themes";
 import type { loader } from "./route";
-import { css } from "../../../../styled-system/css";
+import { css } from "../../../styled-system/css";
 
 export const DeleteTweetButton = ({ tweetId }: { tweetId: string }) => {
 	const fetcher = useFetcher();

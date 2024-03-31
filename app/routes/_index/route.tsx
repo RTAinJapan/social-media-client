@@ -3,7 +3,7 @@ import { Form, useLoaderData } from "@remix-run/react";
 import { assertSession } from "../../session.server";
 import { prisma } from "../../prisma.server";
 import { env } from "../../env.server";
-import { css } from "../../../../styled-system/css";
+import { css } from "../../../styled-system/css";
 import { Button } from "@radix-ui/themes";
 import { TweetForm } from "./tweet-form";
 import { TweetList } from "./tweet-list";

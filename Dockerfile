@@ -11,7 +11,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY prisma prisma
 RUN npx prisma generate
-COPY src src
+COPY app app
+COPY server server
 COPY tsconfig.json vite.config.ts panda.config.ts ./
 RUN npm run build
 

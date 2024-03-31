@@ -4,11 +4,11 @@
 	"scripts": {
 		"dev": "panda codegen && run-p --race dev:*",
 		"dev:types": "tsc --noEmit --watch --preserveWatchOutput",
-		"dev:server": "onchange -ik src/server -- tsx --env-file=.env.local src/server/main.ts",
+		"dev:server": "onchange -ik server -- tsx --env-file=.env.local server/main.ts",
 		"build": "panda codegen && run-s build:*",
 		"build:types": "tsc --noEmit",
 		"build:remix": "remix vite:build",
-		"build:server": "esbuild src/server/main.ts --bundle --format=esm --sourcemap --platform=node --target=node20 --outdir=out --packages=external --external:./build/server/index.js"
+		"build:server": "esbuild server/main.ts --bundle --format=esm --sourcemap --platform=node --target=node20 --outdir=out --packages=external --external:./build/server/index.js"
 	},
 	"dependencies": {
 		"@fastify/helmet": "^11.1.1",
@@ -19,12 +19,18 @@
 		"@remix-run/node": "^2.8.0",
 		"@remix-run/react": "^2.8.0",
 		"fastify": "^4.26.1",
+		"i18next": "^23.10.1",
+		"i18next-browser-languagedetector": "^7.2.1",
+		"i18next-fs-backend": "^2.3.1",
+		"i18next-http-backend": "^2.5.0",
 		"isbot": "^5.1.1",
 		"ky": "^1.2.1",
 		"modern-normalize": "^2.0.0",
 		"puppeteer": "^22.3.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
+		"react-i18next": "^14.1.0",
+		"remix-i18next": "^6.0.1",
 		"twitter-text": "^3.1.0",
 		"zod": "^3.22.4",
 		"zod-form-data": "^2.0.2",

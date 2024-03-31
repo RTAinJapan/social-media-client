@@ -3,7 +3,7 @@ import { useFetcher } from "@remix-run/react";
 import { useEffect, useId, useState } from "react";
 import { Button, Link, TextArea } from "@radix-ui/themes";
 import twitterText from "twitter-text";
-import { css } from "../../../../styled-system/css";
+import { css } from "../../../styled-system/css";
 import type { action } from "./route";
 
 const imageFileTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
