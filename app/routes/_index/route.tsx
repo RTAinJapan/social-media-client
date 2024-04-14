@@ -19,6 +19,7 @@ import { zfd } from "zod-form-data";
 import { z } from "zod";
 import { getTweets, sendReply, tweet } from "../../puppeteer.server";
 import { tmpDir } from "../../tmp-dir.server";
+import { useTranslation } from "react-i18next";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const [session, tweets] = await Promise.all([
@@ -44,6 +45,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default () => {
 	const data = useLoaderData<typeof loader>();
+	const { t } = useTranslation();
 
 	return (
 		<div
@@ -63,16 +65,16 @@ export default () => {
 						placeSelf: "stretch",
 					})}
 				>
-					<div>{data.session.username}としてログイン中</div>
+					<div>{t("signedInAs", { username: data.session.username })}</div>
 					<Form
 						method="post"
 						action="/sign-out"
 						className={css({ justifySelf: "end" })}
 					>
-						<Button type="submit">ログアウト</Button>
+						<Button type="submit">{t("signOut")}</Button>
 					</Form>
 				</div>
-				<div>{data.twitterAccount}としてツイートする</div>
+				<div>{t("tweetAsAccount", { account: data.twitterAccount })}</div>
 				<TweetForm />
 				<TweetList />
 			</div>

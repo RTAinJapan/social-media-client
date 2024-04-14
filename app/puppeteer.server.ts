@@ -6,7 +6,7 @@ const twitterUsername = env.TWITTER_USERNAME;
 const twitterPassword = env.TWITTER_PASSWORD;
 
 const browser = await puppeteer.launch({
-	headless: false,
+	headless: env.PUPPETEER_HEADLESS,
 	args: env.NODE_ENV === "production" ? ["--no-sandbox"] : [],
 	defaultViewport: {
 		width: 1920,
@@ -63,16 +63,8 @@ export const getTweets = async () => {
 		const tweets = await page.$$("article[data-testid=tweet]");
 		await Promise.all(
 			tweets.slice(0, MAX_TWEETS).map(async (tweetElement) => {
-				const textElement = await tweetElement.waitForSelector(
-					"div[data-testid=tweetText]"
-				);
-				if (!textElement) {
-					return;
-				}
-				const text = await textElement.evaluate((el) => el.textContent);
-				if (!text) {
-					return;
-				}
+				const textElement = await tweetElement.$("div[data-testid=tweetText]");
+				const text = await textElement?.evaluate((el) => el.textContent);
 				const timeElement = await tweetElement.waitForSelector("time");
 				if (!timeElement) {
 					return;
@@ -96,14 +88,14 @@ export const getTweets = async () => {
 					return;
 				}
 				const id = link.split("/").pop()!;
-				const tweetText = text.replace(/\n/g, " ");
+				const tweetText = text?.replace(/\n/g, " ");
 				const tweetTime = new Date(time);
 
 				await prisma.tweets.upsert({
 					where: { tweetId: id },
 					create: {
 						tweetId: id,
-						text: tweetText,
+						text: tweetText ?? "",
 						tweetedAt: tweetTime,
 					},
 					update: {

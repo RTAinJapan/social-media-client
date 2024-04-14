@@ -1,3 +1,14 @@
 {
-	"helloworld": "Hello World"
+	"uploadMedia": "Upload Photos & Videos",
+	"clear": "Clear",
+	"tweetAsReply": "Tweeting as a reply",
+	"tweetFinished": "Tweeted",
+	"tweetFailed": "Failed to tweet",
+	"submit": "Submit",
+	"tweetAsAccount": "Tweet as {{account}}",
+	"signedInAs": "Signed in as {{username}}",
+	"signOut": "Sign out",
+	"delete": "Delete",
+	"reply": "Reply",
+	"signInWithDiscord": "Sign in with Discord"
 }

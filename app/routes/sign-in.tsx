@@ -6,6 +6,7 @@ import { parseSession } from "../session.server";
 import { Button } from "@radix-ui/themes";
 import { Form } from "@remix-run/react";
 import { css } from "../../styled-system/css";
+import { useTranslation } from "react-i18next";
 
 const discordOauthRedirectUrl = new URL("/validate-oauth", env.SERVER_ORIGIN);
 
@@ -18,6 +19,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default () => {
+	const { t } = useTranslation();
 	return (
 		<Form
 			method="post"
@@ -28,7 +30,7 @@ export default () => {
 				placeItems: "center",
 			})}
 		>
-			<Button type="submit">Sign in with Discord</Button>
+			<Button type="submit">{t("signInWithDiscord")}</Button>
 		</Form>
 	);
 };

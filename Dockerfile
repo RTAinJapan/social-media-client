@@ -12,9 +12,8 @@ RUN npm ci
 COPY prisma prisma
 RUN npx prisma generate
 COPY app app
-COPY server server
 COPY public public
-COPY tsconfig.json vite.config.ts panda.config.ts ./
+COPY panda.config.ts postcss.config.cjs tsconfig.json vite.config.ts ./
 RUN npm run build
 
 
@@ -67,9 +66,9 @@ COPY --from=build /app/prisma prisma
 COPY --from=build /app/node_modules/.prisma node_modules/.prisma
 COPY --from=build /app/node_modules/@prisma/client node_modules/@prisma/client
 COPY --from=build /app/build build
-COPY --from=build /app/out out
 COPY --from=build /app/public public
 
 ENV NODE_ENV=production
+ENV PUPPETEER_HEADLESS=true
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node --enable-source-maps out/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]

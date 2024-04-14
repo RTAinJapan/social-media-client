@@ -1,10 +1,11 @@
 import { useReplyStore } from "../../stores/reply";
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useId, useState } from "react";
-import { Button, Link, TextArea } from "@radix-ui/themes";
+import { Button, TextArea } from "@radix-ui/themes";
 import twitterText from "twitter-text";
 import { css } from "../../../styled-system/css";
 import type { action } from "./route";
+import { useTranslation } from "react-i18next";
 
 const imageFileTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const videoFileTypes = ["video/mp4", "video/quicktime"];
@@ -29,12 +30,13 @@ const TweetTextInput = ({ disabled }: { disabled: boolean }) => {
 const ImageFileInput = () => {
 	const inputId = useId();
 	const [files, setFiles] = useState<File[] | null>(null);
+	const { t } = useTranslation();
 
 	return (
 		<div className={css({ display: "grid", gap: "8px" })}>
 			<div>
 				<Button asChild className={css({ justifySelf: "start" })}>
-					<label htmlFor={inputId}>画像・動画を添付</label>
+					<label htmlFor={inputId}>{t("uploadMedia")}</label>
 				</Button>
 				<input
 					name="files"
@@ -80,6 +82,7 @@ const ImageFileInput = () => {
 const ReplyDisplay = () => {
 	const reply = useReplyStore((store) => store.reply);
 	const clearReply = useReplyStore((store) => store.clearReply);
+	const { t } = useTranslation();
 
 	if (!reply) {
 		return;
@@ -96,18 +99,13 @@ const ReplyDisplay = () => {
 			})}
 		>
 			<input type="hidden" name="replyToTweetId" value={reply} />
-			<div>
-				<Link href={`https://twitter.com/x/status/${reply}`} target="_blank">
-					ツイート
-				</Link>
-				へのリプライとしてツイートする
-			</div>
+			<div>{t("tweetAsReply")}</div>
 			<Button
 				onClick={() => {
 					clearReply();
 				}}
 			>
-				クリア
+				{t("clear")}
 			</Button>
 		</div>
 	);
@@ -118,15 +116,16 @@ export const TweetForm = () => {
 	const sending = fetcher.state === "submitting";
 	const [formKey, setFormKey] = useState(0);
 	const clearReply = useReplyStore((store) => store.clearReply);
+	const { t } = useTranslation();
 
 	useEffect(() => {
 		if (fetcher.state === "loading") {
 			if (fetcher.data?.ok) {
-				alert(`ツイートしました: ${fetcher.data.data}`);
+				alert(`${t("tweetFinished")}: ${fetcher.data.data}`);
 				setFormKey((n) => n + 1);
 				clearReply();
 			} else {
-				alert(`ツイートに失敗しました: ${fetcher.data?.error}`);
+				alert(`${t("tweetFailed")}: ${fetcher.data?.error}`);
 			}
 		}
 	}, [fetcher.state]);
@@ -149,7 +148,7 @@ export const TweetForm = () => {
 				disabled={sending}
 				className={css({ justifySelf: "end" })}
 			>
-				送信
+				{t("submit")}
 			</Button>
 		</fetcher.Form>
 	);

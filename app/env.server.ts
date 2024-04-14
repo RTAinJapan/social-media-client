@@ -13,6 +13,8 @@ const envSchema = z.object({
 
 	TWITTER_USERNAME: z.string(),
 	TWITTER_PASSWORD: z.string(),
+
+	PUPPETEER_HEADLESS: z.coerce.boolean().default(false),
 });
 
 export const env = envSchema.parse(process.env);

@@ -3,9 +3,11 @@ import { useFetcher, useLoaderData } from "@remix-run/react";
 import { Button, Link } from "@radix-ui/themes";
 import type { loader } from "./route";
 import { css } from "../../../styled-system/css";
+import { useTranslation } from "react-i18next";
 
 export const DeleteTweetButton = ({ tweetId }: { tweetId: string }) => {
 	const fetcher = useFetcher();
+	const { t } = useTranslation();
 
 	return (
 		<fetcher.Form
@@ -17,7 +19,7 @@ export const DeleteTweetButton = ({ tweetId }: { tweetId: string }) => {
 				}
 			}}
 		>
-			<Button type="submit">削除</Button>
+			<Button type="submit">{t("delete")}</Button>
 		</fetcher.Form>
 	);
 };
@@ -26,6 +28,7 @@ export const TweetList = () => {
 	const data = useLoaderData<typeof loader>();
 	const setReply = useReplyStore((store) => store.setReply);
 	const reply = useReplyStore((store) => store.reply);
+	const { t } = useTranslation();
 
 	return (
 		<div className={css({ display: "grid", gap: "8px" })}>
@@ -61,7 +64,7 @@ export const TweetList = () => {
 								setReply(tweet.id);
 							}}
 						>
-							リプライ
+							{t("reply")}
 						</Button>
 						<DeleteTweetButton tweetId={tweet.id} />
 					</div>

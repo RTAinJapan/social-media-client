@@ -1,3 +1,14 @@
 {
-	"helloworld": "こんにちは、世界"
+	"uploadMedia": "画像・動画を添付",
+	"clear": "クリア",
+	"tweetAsReply": "返信としてツイート",
+	"tweetFinished": "ツイートしました",
+	"tweetFailed": "ツイートに失敗しました",
+	"submit": "送信",
+	"tweetAsAccount": "{{account}}としてツイート",
+	"signedInAs": "{{account}}としてログイン中",
+	"signOut": "ログアウト",
+	"delete": "削除",
+	"reply": "リプライ",
+	"signInWithDiscord": "Discordでログイン"
 }
