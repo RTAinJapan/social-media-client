@@ -59,7 +59,7 @@ export const setupTwitterLogin = async () => {
 		const inputDataTestId = await input?.evaluateHandle((el) =>
 			el.getAttribute("data-testid")
 		);
-		console.error("Input data-testid", inputDataTestId);
+		console.error("Input data-testid", inputDataTestId?.toString());
 		throw new Error("timeout");
 	};
 	await Promise.race([
