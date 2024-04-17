@@ -10,8 +10,11 @@ import { i18next } from "./i18next.server";
 import { I18nextProvider, initReactI18next } from "react-i18next";
 import i18nextFsBackend from "i18next-fs-backend";
 import { i18nextOptions } from "./i18next-options";
+import { setupTwitterLogin } from "./puppeteer.server";
 
 const ABORT_DELAY = 5_000;
+
+await setupTwitterLogin();
 
 export default async function handleRequest(
 	request: Request,

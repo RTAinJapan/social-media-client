@@ -19,7 +19,7 @@ const chromeUserAgent =
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-{
+export const setupTwitterLogin = async () => {
 	const loginPage = await browser.newPage();
 	await loginPage.setUserAgent(chromeUserAgent);
 	await loginPage.goto("https://twitter.com/login");
@@ -44,9 +44,31 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 			break;
 		}
 	}
-	await loginPage.waitForNavigation();
+	const confirmEmail = async () => {
+		const emailInput = await loginPage.waitForSelector(
+			'input[data-testid="ocfEnterTextTextInput"]'
+		);
+		await emailInput?.type(env.TWITTER_USER_EMAIL);
+		await emailInput?.press("Enter");
+		await loginPage.waitForNavigation();
+	};
+	const timeout = async () => {
+		await sleep(10000);
+		console.error("Setup Twitter timeout (10s)");
+		const input = await loginPage.waitForSelector("input");
+		const inputDataTestId = await input?.evaluateHandle((el) =>
+			el.getAttribute("data-testid")
+		);
+		console.error("Input data-testid", inputDataTestId);
+		throw new Error("timeout");
+	};
+	await Promise.race([
+		loginPage.waitForNavigation(),
+		confirmEmail(),
+		timeout(),
+	]);
 	await loginPage.close();
-}
+};
 
 const MAX_TWEETS = 5;
 

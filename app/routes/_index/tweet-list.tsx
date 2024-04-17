@@ -5,7 +5,7 @@ import type { loader } from "./route";
 import { css } from "../../../styled-system/css";
 import { useTranslation } from "react-i18next";
 
-export const DeleteTweetButton = ({ tweetId }: { tweetId: string }) => {
+const DeleteTweetButton = ({ tweetId }: { tweetId: string }) => {
 	const fetcher = useFetcher();
 	const { t } = useTranslation();
 
