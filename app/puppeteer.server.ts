@@ -59,7 +59,7 @@ export const setupTwitterLogin = async () => {
 		const inputDataTestId = await input?.evaluateHandle((el) =>
 			el.getAttribute("data-testid")
 		);
-		console.error("Input data-testid", inputDataTestId?.toString());
+		console.error("Input data-testid", await inputDataTestId?.jsonValue());
 		throw new Error("timeout");
 	};
 	await Promise.race([
@@ -68,6 +68,7 @@ export const setupTwitterLogin = async () => {
 		timeout(),
 	]);
 	await loginPage.close();
+	await getTweets();
 };
 
 const MAX_TWEETS = 5;

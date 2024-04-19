@@ -1,10 +1,9 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
-import { Form, useLoaderData } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import { assertSession } from "../../session.server";
 import { prisma } from "../../prisma.server";
 import { env } from "../../env.server";
 import { css } from "../../../styled-system/css";
-import { Button } from "@radix-ui/themes";
 import { TweetForm } from "./tweet-form";
 import { TweetList } from "./tweet-list";
 import {
@@ -20,6 +19,7 @@ import { z } from "zod";
 import { getTweets, sendReply, tweet } from "../../puppeteer.server";
 import { tmpDir } from "../../tmp-dir.server";
 import { useTranslation } from "react-i18next";
+import { SignOutButton } from "./sign-out-button";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const [session, tweets] = await Promise.all([
@@ -43,7 +43,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 	});
 };
 
-export default () => {
+export default function IndexPage() {
 	const data = useLoaderData<typeof loader>();
 	const { t } = useTranslation();
 
@@ -57,7 +57,14 @@ export default () => {
 				justifyContent: "center",
 			})}
 		>
-			<div className={css({ display: "grid", gap: "8px", width: "400px" })}>
+			<div
+				className={css({
+					display: "grid",
+					alignContent: "start",
+					gap: "8px",
+					width: "400px",
+				})}
+			>
 				<div
 					className={css({
 						display: "grid",
@@ -66,13 +73,9 @@ export default () => {
 					})}
 				>
 					<div>{t("signedInAs", { username: data.session.username })}</div>
-					<Form
-						method="post"
-						action="/sign-out"
-						className={css({ justifySelf: "end" })}
-					>
-						<Button type="submit">{t("signOut")}</Button>
-					</Form>
+					<div className={css({ justifySelf: "end" })}>
+						<SignOutButton />
+					</div>
 				</div>
 				<div>{t("tweetAsAccount", { account: data.twitterAccount })}</div>
 				<TweetForm />
@@ -80,7 +83,7 @@ export default () => {
 			</div>
 		</div>
 	);
-};
+}
 
 const actionSchema = zfd.formData({
 	text: zfd.text(z.string().optional()),
