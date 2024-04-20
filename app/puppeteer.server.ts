@@ -60,7 +60,7 @@ export const setupTwitterLogin = async () => {
 			await loginPage.screenshot({
 				path: path.join(
 					env.PUPPETEER_SCREENSHOT_PATH,
-					"twitter-login-timeout.png"
+					`twitter-login-timeout-${Date.now()}.png`
 				),
 			});
 		}
