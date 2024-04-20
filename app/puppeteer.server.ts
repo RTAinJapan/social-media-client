@@ -1,3 +1,4 @@
+import * as path from "path";
 import puppeteer from "puppeteer";
 import { env } from "./env.server.js";
 import { prisma } from "./prisma.server.js";
@@ -190,6 +191,16 @@ export const tweet = async (text: string, files: string[]) => {
 		}
 		await tweetButton.click({ count: 2 });
 		await page.waitForSelector("div[data-testid=toast]");
+	} catch (error) {
+		if (env.PUPPETEER_SCREENSHOT_PATH) {
+			await page.screenshot({
+				path: path.join(
+					env.PUPPETEER_SCREENSHOT_PATH,
+					`tweet-${Date.now()}.png`
+				),
+			});
+		}
+		throw error;
 	} finally {
 		await page.close();
 	}
