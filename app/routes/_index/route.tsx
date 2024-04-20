@@ -50,7 +50,6 @@ export default function IndexPage() {
 	return (
 		<div
 			className={css({
-				margin: "8px",
 				width: "100vw",
 				height: "100vh",
 				display: "grid",
@@ -59,9 +58,11 @@ export default function IndexPage() {
 		>
 			<div
 				className={css({
+					padding: "8px",
 					display: "grid",
 					alignContent: "start",
 					gap: "8px",
+					maxWidth: "100vw",
 					width: "400px",
 				})}
 			>

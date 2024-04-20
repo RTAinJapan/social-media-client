@@ -20,7 +20,7 @@ const TweetTextInput = ({ disabled }: { disabled: boolean }) => {
 					setTweetLength(twitterText.getTweetLength(e.target.value));
 				}}
 				disabled={disabled}
-				className={css({ height: "200px", width: "100%" })}
+				className={css({ height: "150px", width: "100%" })}
 			/>
 			<div className={css({ justifySelf: "end" })}>{tweetLength}/280</div>
 		</>
