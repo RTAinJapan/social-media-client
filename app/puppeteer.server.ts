@@ -39,6 +39,16 @@ export const setupTwitterLogin = async () => {
 	await passwordInput?.type(twitterPassword);
 	await passwordInput?.press("Enter");
 
+	let alreadyFinished = false;
+
+	const waitForFinish = async () => {
+		await loginPage.waitForNavigation();
+		if (!alreadyFinished) {
+			alreadyFinished = true;
+			await loginPage.close();
+		}
+	};
+
 	const confirmation = async () => {
 		const input = await loginPage.waitForSelector(
 			'input[data-testid="ocfEnterTextTextInput"]'
@@ -48,19 +58,27 @@ export const setupTwitterLogin = async () => {
 			await input?.type(env.TWITTER_USER_EMAIL);
 			await input?.press("Enter");
 			await loginPage.waitForNavigation();
+			if (!alreadyFinished) {
+				alreadyFinished = true;
+				await loginPage.close();
+			}
 		} else {
 			waitingForConfirmationCode = true;
 			console.log("Wait for confirmation code");
+			alreadyFinished = true;
 		}
 	};
 
-	await Promise.race([
-		loginPage.waitForNavigation(),
-		confirmation(),
-		sleep(10_000),
-	]);
-	await loginPage.close();
-	await getTweets();
+	const timeout = async () => {
+		await sleep(10_000);
+		if (!alreadyFinished) {
+			alreadyFinished = true;
+			console.error("Login timeout");
+			await loginPage.close();
+		}
+	};
+
+	await Promise.race([waitForFinish(), confirmation(), timeout()]);
 };
 
 export const inputConfirmationCode = async (code: string) => {
