@@ -108,7 +108,7 @@ export const takeScreenshot = async () => {
 	}
 	const page = await browser.newPage();
 	await page.goto("https://twitter.com/");
-	await page.waitForNavigation();
+	await sleep(10_000);
 	await page.screenshot({
 		path: path.join(env.PUPPETEER_SCREENSHOT_PATH, `twitter-${Date.now()}.png`),
 	});
