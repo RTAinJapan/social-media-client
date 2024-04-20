@@ -1,3 +1,4 @@
+import * as path from "node:path";
 import puppeteer from "puppeteer";
 import { env } from "./env.server.js";
 import { prisma } from "./prisma.server.js";
@@ -55,7 +56,14 @@ export const setupTwitterLogin = async () => {
 	const timeout = async () => {
 		await sleep(10000);
 		console.error("Setup Twitter timeout (10s)");
-		await loginPage.screenshot({ path: "/tmp/twitter-login-timeout.png" });
+		if (env.PUPPETEER_SCREENSHOT_PATH) {
+			await loginPage.screenshot({
+				path: path.join(
+					env.PUPPETEER_SCREENSHOT_PATH,
+					"twitter-login-timeout.png"
+				),
+			});
+		}
 		const input = await loginPage.$("input");
 		const inputDataTestId = await input?.evaluateHandle((el) =>
 			el.getAttribute("data-testid")
