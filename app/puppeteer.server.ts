@@ -1,4 +1,3 @@
-import * as path from "node:path";
 import puppeteer from "puppeteer";
 import { env } from "./env.server.js";
 import { prisma } from "./prisma.server.js";
@@ -20,64 +19,63 @@ const chromeUserAgent =
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const loginPage = await browser.newPage();
+
+let waitingForConfirmationCode = false;
+
+export const getWaitingForConfirmationCode = () => {
+	return waitingForConfirmationCode;
+};
+
 export const setupTwitterLogin = async () => {
-	const loginPage = await browser.newPage();
 	await loginPage.setUserAgent(chromeUserAgent);
 	await loginPage.goto("https://twitter.com/login");
-	await loginPage.waitForNetworkIdle();
+
 	const usernameInput = await loginPage.waitForSelector("input[name=text]");
 	await usernameInput?.type(twitterUsername);
-	const nextSpans = await loginPage.$$("span");
-	for (const span of nextSpans) {
-		const text = await span.evaluate((el) => el.textContent);
-		if (text === "Next") {
-			await span.click();
-			break;
-		}
-	}
+	await usernameInput?.press("Enter");
+
 	const passwordInput = await loginPage.waitForSelector("input[name=password]");
 	await passwordInput?.type(twitterPassword);
-	const loginSpans = await loginPage.$$("span");
-	for (const span of loginSpans) {
-		const text = await span.evaluate((el) => el.textContent);
-		if (text === "Log in") {
-			await span.click();
-			break;
-		}
-	}
-	const confirmEmail = async () => {
-		const emailInput = await loginPage.waitForSelector(
+	await passwordInput?.press("Enter");
+
+	const confirmation = async () => {
+		const input = await loginPage.waitForSelector(
 			'input[data-testid="ocfEnterTextTextInput"]'
 		);
-		await emailInput?.type(env.TWITTER_USER_EMAIL);
-		await emailInput?.press("Enter");
-		await loginPage.waitForNavigation();
-	};
-	const timeout = async () => {
-		await sleep(10000);
-		console.error("Setup Twitter timeout (10s)");
-		if (env.PUPPETEER_SCREENSHOT_PATH) {
-			await loginPage.screenshot({
-				path: path.join(
-					env.PUPPETEER_SCREENSHOT_PATH,
-					`twitter-login-timeout-${Date.now()}.png`
-				),
-			});
+		const inputType = await input?.evaluate((el) => el.getAttribute("type"));
+		if (inputType === "email") {
+			await input?.type(env.TWITTER_USER_EMAIL);
+			await input?.press("Enter");
+			await loginPage.waitForNavigation();
+		} else {
+			waitingForConfirmationCode = true;
+			console.log("Wait for confirmation code");
 		}
-		const input = await loginPage.$("input");
-		const inputDataTestId = await input?.evaluateHandle((el) =>
-			el.getAttribute("data-testid")
-		);
-		console.error("Input data-testid", await inputDataTestId?.jsonValue());
-		throw new Error("timeout");
 	};
+
 	await Promise.race([
 		loginPage.waitForNavigation(),
-		confirmEmail(),
-		timeout(),
+		confirmation(),
+		sleep(10_000),
 	]);
 	await loginPage.close();
 	await getTweets();
+};
+
+export const inputConfirmationCode = async (code: string) => {
+	if (loginPage.isClosed()) {
+		return;
+	}
+	const input = await loginPage.$('input[data-testid="ocfEnterTextTextInput"]');
+	if (!input) {
+		throw new Error("No input");
+	}
+	await input.type(code);
+	await input.press("Enter");
+	await loginPage.waitForNavigation();
+	await loginPage.close();
+	waitingForConfirmationCode = false;
 };
 
 const MAX_TWEETS = 5;
