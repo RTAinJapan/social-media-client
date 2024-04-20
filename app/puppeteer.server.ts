@@ -29,51 +29,57 @@ export const getWaitingForConfirmationCode = () => {
 };
 
 export const setupTwitterLogin = async () => {
-	await loginPage.setUserAgent(chromeUserAgent);
-	await loginPage.goto("https://twitter.com/login");
+	try {
+		await loginPage.setUserAgent(chromeUserAgent);
+		await loginPage.goto("https://twitter.com/login");
 
-	const usernameInput = await loginPage.waitForSelector("input[name=text]");
-	await usernameInput?.type(twitterUsername);
-	await usernameInput?.press("Enter");
+		const usernameInput = await loginPage.waitForSelector("input[name=text]");
+		await usernameInput?.type(twitterUsername);
+		await usernameInput?.press("Enter");
 
-	const passwordInput = await loginPage.waitForSelector("input[name=password]");
-	await passwordInput?.type(twitterPassword);
-	await passwordInput?.press("Enter");
-
-	const abortController = new AbortController();
-
-	const waitForFinish = async () => {
-		await loginPage.waitForNavigation();
-		console.log("Login finished");
-		if (!abortController.signal.aborted) {
-			abortController.abort();
-			await loginPage.close();
-		}
-	};
-
-	const confirmation = async () => {
-		const input = await loginPage.waitForSelector(
-			'input[data-testid="ocfEnterTextTextInput"]',
-			{ signal: abortController.signal }
+		const passwordInput = await loginPage.waitForSelector(
+			"input[name=password]"
 		);
-		const inputType = await input?.evaluate((el) => el.getAttribute("type"));
-		if (inputType === "email") {
-			await input?.type(env.TWITTER_USER_EMAIL);
-			await input?.press("Enter");
+		await passwordInput?.type(twitterPassword);
+		await passwordInput?.press("Enter");
+
+		const abortController = new AbortController();
+
+		const waitForFinish = async () => {
 			await loginPage.waitForNavigation();
-			console.log("Email confirmation finished");
+			console.log("Login finished");
 			if (!abortController.signal.aborted) {
 				abortController.abort();
 				await loginPage.close();
 			}
-		} else {
-			waitingForConfirmationCode = true;
-			console.log("Wait for confirmation code");
-			abortController.abort();
-		}
-	};
+		};
 
-	await Promise.race([waitForFinish(), confirmation()]);
+		const confirmation = async () => {
+			const input = await loginPage.waitForSelector(
+				'input[data-testid="ocfEnterTextTextInput"]',
+				{ signal: abortController.signal }
+			);
+			const inputType = await input?.evaluate((el) => el.getAttribute("type"));
+			if (inputType === "email") {
+				await input?.type(env.TWITTER_USER_EMAIL);
+				await input?.press("Enter");
+				await loginPage.waitForNavigation();
+				console.log("Email confirmation finished");
+				if (!abortController.signal.aborted) {
+					abortController.abort();
+					await loginPage.close();
+				}
+			} else {
+				waitingForConfirmationCode = true;
+				console.log("Wait for confirmation code");
+				abortController.abort();
+			}
+		};
+
+		await Promise.race([waitForFinish(), confirmation()]);
+	} catch (error) {
+		console.error(error);
+	}
 };
 
 export const inputConfirmationCode = async (code: string) => {
