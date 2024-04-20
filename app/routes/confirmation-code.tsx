@@ -1,4 +1,9 @@
-import { json, redirect, type ActionFunctionArgs } from "@remix-run/node";
+import {
+	json,
+	redirect,
+	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
+} from "@remix-run/node";
 import {
 	getWaitingForConfirmationCode,
 	inputConfirmationCode,
@@ -10,7 +15,8 @@ import { zfd } from "zod-form-data";
 import { z } from "zod";
 import { assertSession } from "../session.server";
 
-export const loader = () => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+	await assertSession(request);
 	const waitingForConfirmationCode = getWaitingForConfirmationCode();
 	if (!waitingForConfirmationCode) {
 		throw redirect("/");

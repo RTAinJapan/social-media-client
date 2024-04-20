@@ -97,6 +97,18 @@ export const inputConfirmationCode = async (code: string) => {
 	waitingForConfirmationCode = false;
 };
 
+export const takeScreenshot = async () => {
+	if (!env.PUPPETEER_SCREENSHOT_PATH) {
+		return;
+	}
+	const page = await browser.newPage();
+	await page.goto("https://twitter.com/");
+	await page.screenshot({
+		path: path.join(env.PUPPETEER_SCREENSHOT_PATH, `twitter-${Date.now()}.png`),
+	});
+	await page.close();
+};
+
 const MAX_TWEETS = 5;
 
 export const getTweets = async () => {
