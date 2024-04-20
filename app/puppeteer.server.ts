@@ -40,61 +40,60 @@ export const setupTwitterLogin = async () => {
 	await passwordInput?.type(twitterPassword);
 	await passwordInput?.press("Enter");
 
-	let alreadyFinished = false;
+	const abortController = new AbortController();
 
 	const waitForFinish = async () => {
 		await loginPage.waitForNavigation();
-		if (!alreadyFinished) {
-			alreadyFinished = true;
+		console.log("Login finished");
+		if (!abortController.signal.aborted) {
+			abortController.abort();
 			await loginPage.close();
 		}
 	};
 
 	const confirmation = async () => {
 		const input = await loginPage.waitForSelector(
-			'input[data-testid="ocfEnterTextTextInput"]'
+			'input[data-testid="ocfEnterTextTextInput"]',
+			{ signal: abortController.signal }
 		);
 		const inputType = await input?.evaluate((el) => el.getAttribute("type"));
 		if (inputType === "email") {
 			await input?.type(env.TWITTER_USER_EMAIL);
 			await input?.press("Enter");
 			await loginPage.waitForNavigation();
-			if (!alreadyFinished) {
-				alreadyFinished = true;
+			console.log("Email confirmation finished");
+			if (!abortController.signal.aborted) {
+				abortController.abort();
 				await loginPage.close();
 			}
 		} else {
 			waitingForConfirmationCode = true;
 			console.log("Wait for confirmation code");
-			alreadyFinished = true;
+			abortController.abort();
 		}
 	};
 
-	const timeout = async () => {
-		await sleep(10_000);
-		if (!alreadyFinished) {
-			alreadyFinished = true;
-			console.error("Login timeout");
-			await loginPage.close();
-		}
-	};
-
-	await Promise.race([waitForFinish(), confirmation(), timeout()]);
+	await Promise.race([waitForFinish(), confirmation()]);
 };
 
 export const inputConfirmationCode = async (code: string) => {
 	if (loginPage.isClosed()) {
 		return;
 	}
-	const input = await loginPage.$('input[data-testid="ocfEnterTextTextInput"]');
-	if (!input) {
-		throw new Error("No input");
+	try {
+		const input = await loginPage.$(
+			'input[data-testid="ocfEnterTextTextInput"]'
+		);
+		if (!input) {
+			throw new Error("No input");
+		}
+		await input.type(code);
+		await input.press("Enter");
+		await loginPage.waitForNavigation();
+		waitingForConfirmationCode = false;
+	} finally {
+		await loginPage.close();
 	}
-	await input.type(code);
-	await input.press("Enter");
-	await loginPage.waitForNavigation();
-	await loginPage.close();
-	waitingForConfirmationCode = false;
 };
 
 export const takeScreenshot = async () => {
