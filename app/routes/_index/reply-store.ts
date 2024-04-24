@@ -6,6 +6,10 @@ export const useReplyStore = create<{
 	clearReply: () => void;
 }>((set) => ({
 	reply: null,
-	setReply: (tweetId) => set({ reply: tweetId }),
-	clearReply: () => set({ reply: null }),
+	setReply: (tweetId) => {
+		set({ reply: tweetId });
+	},
+	clearReply: () => {
+		set({ reply: null });
+	},
 }));

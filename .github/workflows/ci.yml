@@ -21,7 +21,9 @@ jobs:
         with:
           node-version: "20"
       - run: npm ci
+      - run: npm run lint
       - run: npm run build
+      - run: npm run check-format
 
   docker-image:
     runs-on: ubuntu-latest

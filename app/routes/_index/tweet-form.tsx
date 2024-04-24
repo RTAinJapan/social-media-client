@@ -119,16 +119,16 @@ export const TweetForm = () => {
 	const { t } = useTranslation();
 
 	useEffect(() => {
-		if (fetcher.state === "loading") {
-			if (fetcher.data?.ok) {
+		if (fetcher.state === "loading" && fetcher.data) {
+			if (fetcher.data.ok) {
 				alert(`${t("tweetFinished")}: ${fetcher.data.data}`);
 				setFormKey((n) => n + 1);
 				clearReply();
 			} else {
-				alert(`${t("tweetFailed")}: ${fetcher.data?.error}`);
+				alert(`${t("tweetFailed")}: ${fetcher.data.error}`);
 			}
 		}
-	}, [fetcher.state]);
+	}, [fetcher.state, fetcher.data, clearReply, t]);
 
 	return (
 		<fetcher.Form

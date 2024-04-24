@@ -154,7 +154,11 @@ export const getTweets = async () => {
 				if (!link) {
 					return;
 				}
-				const id = link.split("/").pop()!;
+				const id = link.split("/").pop();
+				if (!id) {
+					throw new Error("No tweet ID");
+				}
+
 				const tweetText = text?.replace(/\n/g, " ");
 				const tweetTime = new Date(time);
 
@@ -181,7 +185,7 @@ export const tweet = async (text: string, files: string[]) => {
 	const page = await browser.newPage();
 	await page.setUserAgent(chromeUserAgent);
 	try {
-		page.goto("https://twitter.com/");
+		await page.goto("https://twitter.com/");
 
 		const label = await page.waitForSelector(
 			'label[data-testid="tweetTextarea_0_label"]'

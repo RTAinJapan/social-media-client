@@ -9,7 +9,10 @@
 		"dev:server": "remix vite:dev --port 3000",
 		"build": "panda codegen && run-s build:*",
 		"build:types": "tsc --noEmit",
-		"build:remix": "remix vite:build"
+		"build:remix": "remix vite:build",
+		"lint": "eslint --ext .ts,.tsx .",
+		"check-format": "prettier --check .",
+		"format": "prettier --write ."
 	},
 	"dependencies": {
 		"@prisma/client": "^5.10.2",
