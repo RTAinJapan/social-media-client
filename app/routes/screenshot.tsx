@@ -7,7 +7,7 @@ import { assertSession } from "../session.server";
 import { css } from "../../styled-system/css";
 import { Button } from "@radix-ui/themes";
 import { Form } from "@remix-run/react";
-import { takeScreenshot } from "../puppeteer.server";
+import { takeScreenshot } from "../api/twitter/puppeteer.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	await assertSession(request);
