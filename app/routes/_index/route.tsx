@@ -16,7 +16,11 @@ import {
 } from "@remix-run/node";
 import { zfd } from "zod-form-data";
 import { z } from "zod";
-import { getTweets, sendReply, tweet } from "../../puppeteer.server";
+import {
+	getTweets,
+	sendReply,
+	tweet,
+} from "../../api/twitter/puppeteer.server";
 import { tmpDir } from "../../tmp-dir.server";
 import { useTranslation } from "react-i18next";
 import { SignOutButton } from "./sign-out-button";

@@ -18,11 +18,11 @@ import {
 	useLoaderData,
 	useRouteError,
 } from "@remix-run/react";
-import { i18next } from "./i18next.server";
+import { remixI18next } from "./i18next/remix-i18next";
 import { useTranslation } from "react-i18next";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const locale = await i18next.getLocale(request);
+	const locale = await remixI18next.getLocale(request);
 	return json({ locale });
 };
 

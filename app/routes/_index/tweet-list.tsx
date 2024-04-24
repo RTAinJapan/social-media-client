@@ -1,4 +1,4 @@
-import { useReplyStore } from "../../stores/reply";
+import { useReplyStore } from "./reply-store";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import { Button, Link } from "@radix-ui/themes";
 import type { loader } from "./route";

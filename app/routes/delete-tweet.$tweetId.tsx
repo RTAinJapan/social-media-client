@@ -1,6 +1,6 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { z } from "zod";
-import { deleteTweet } from "../puppeteer.server";
+import { deleteTweet } from "../api/twitter/puppeteer.server";
 import { prisma } from "../prisma.server";
 
 const actionParamsSchema = z.object({

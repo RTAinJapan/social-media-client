@@ -1,4 +1,4 @@
-import { useReplyStore } from "../../stores/reply";
+import { useReplyStore } from "./reply-store";
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useId, useState } from "react";
 import { Button, TextArea } from "@radix-ui/themes";
