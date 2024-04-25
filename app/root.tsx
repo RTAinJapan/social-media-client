@@ -1,4 +1,4 @@
-import "./index.css";
+import "./root/index.css";
 
 import { Theme } from "@radix-ui/themes";
 
@@ -20,6 +20,8 @@ import {
 } from "@remix-run/react";
 import { remixI18next } from "./i18next/remix-i18next";
 import { useTranslation } from "react-i18next";
+import { FullscreenSpinner } from "./root/fullscreen-spinner";
+import type { PropsWithChildren } from "react";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const locale = await remixI18next.getLocale(request);
@@ -34,20 +36,19 @@ export const meta: MetaFunction = () => [
 
 export const links: LinksFunction = () => [];
 
-export default () => {
-	const data = useLoaderData<typeof loader>();
+const Document = ({
+	children,
+	locale,
+}: PropsWithChildren<{ locale: string }>) => {
 	const { i18n } = useTranslation();
-
 	return (
-		<html lang={data.locale} dir={i18n.dir()}>
+		<html lang={locale} dir={i18n.dir()}>
 			<head>
 				<Meta />
 				<Links />
 			</head>
 			<body>
-				<Theme>
-					<Outlet />
-				</Theme>
+				{children}
 				<ScrollRestoration />
 				<Scripts />
 			</body>
@@ -55,17 +56,37 @@ export default () => {
 	);
 };
 
+export default function Root() {
+	const data = useLoaderData<typeof loader>();
+	return (
+		<Document locale={data.locale}>
+			<Theme>
+				<Outlet />
+				<FullscreenSpinner />
+			</Theme>
+		</Document>
+	);
+}
+
 export const ErrorBoundary = () => {
 	const error = useRouteError();
 
 	if (!isRouteErrorResponse(error)) {
-		return <div>Something went wrong</div>;
+		return (
+			<Document locale="en">
+				<div>Something went wrong</div>
+			</Document>
+		);
 	}
 
 	return (
-		<div>
-			<h1>{error.status}</h1>
-			<p>{error.statusText}</p>
-		</div>
+		<Document locale="en">
+			<div>
+				<h1>
+					{error.status} {error.statusText}
+				</h1>
+				<p>{error.data}</p>
+			</div>
+		</Document>
 	);
 };

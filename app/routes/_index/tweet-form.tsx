@@ -6,11 +6,12 @@ import twitterText from "twitter-text";
 import { css } from "../../../styled-system/css";
 import type { action } from "./route";
 import { useTranslation } from "react-i18next";
+import { useSetFullscreenSpinnerShow } from "../../root/fullscreen-spinner-store";
 
 const imageFileTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const videoFileTypes = ["video/mp4", "video/quicktime"];
 
-const TweetTextInput = ({ disabled }: { disabled: boolean }) => {
+const TweetTextInput = () => {
 	const [tweetLength, setTweetLength] = useState(0);
 	return (
 		<>
@@ -19,7 +20,6 @@ const TweetTextInput = ({ disabled }: { disabled: boolean }) => {
 				onChange={(e) => {
 					setTweetLength(twitterText.getTweetLength(e.target.value));
 				}}
-				disabled={disabled}
 				className={css({ height: "150px", width: "100%" })}
 			/>
 			<div className={css({ justifySelf: "end" })}>{tweetLength}/280</div>
@@ -114,9 +114,14 @@ const ReplyDisplay = () => {
 export const TweetForm = () => {
 	const fetcher = useFetcher<typeof action>();
 	const sending = fetcher.state === "submitting";
+	const setSpinnerShow = useSetFullscreenSpinnerShow();
 	const [formKey, setFormKey] = useState(0);
 	const clearReply = useReplyStore((store) => store.clearReply);
 	const { t } = useTranslation();
+
+	useEffect(() => {
+		setSpinnerShow(sending);
+	}, [sending, setSpinnerShow]);
 
 	useEffect(() => {
 		if (fetcher.state === "loading" && fetcher.data) {
@@ -141,13 +146,9 @@ export const TweetForm = () => {
 			key={formKey}
 		>
 			<ReplyDisplay />
-			<TweetTextInput disabled={sending} />
+			<TweetTextInput />
 			<ImageFileInput />
-			<Button
-				type="submit"
-				disabled={sending}
-				className={css({ justifySelf: "end" })}
-			>
+			<Button type="submit" className={css({ justifySelf: "end" })}>
 				{t("submit")}
 			</Button>
 		</fetcher.Form>
