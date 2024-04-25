@@ -7,11 +7,11 @@
 		"dev": "panda codegen && run-p --race dev:*",
 		"dev:types": "tsc --noEmit --watch --preserveWatchOutput",
 		"dev:server": "remix vite:dev --port 3000",
-		"build": "panda codegen && run-s build:*",
-		"build:types": "tsc --noEmit",
-		"build:remix": "remix vite:build",
-		"lint": "eslint --ext .ts,.tsx .",
-		"check-format": "prettier --check .",
+		"build": "panda codegen && remix vite:build",
+		"check": "run-s check:*",
+		"check:types": "tsc --noEmit",
+		"check:lint": "eslint --ext .ts,.tsx .",
+		"check:format": "prettier --check .",
 		"format": "prettier --write ."
 	},
 	"dependencies": {
