@@ -1,7 +1,7 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { discordOauthStateCookie, sessionCookie } from "../cookies.server";
 import { env } from "../env.server";
-import ky from "ky";
+import ky, { HTTPError } from "ky";
 import { randomBytes } from "node:crypto";
 import { prisma } from "../prisma.server";
 import { useEffect } from "react";
@@ -13,7 +13,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const state = url.searchParams.get("state");
 
 	if (!code) {
-		return new Response("missing code", { status: 400 });
+		throw new Response("missing code", { status: 400 });
 	}
 
 	const cookieHeader = request.headers.get("Cookie");
@@ -22,7 +22,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 	)) as string;
 
 	if (state !== cookieState) {
-		return new Response("mismatch state", { status: 400 });
+		throw new Response("mismatch state", { status: 400 });
 	}
 
 	const authorizationHeader = Buffer.from(
@@ -45,7 +45,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 			expires_in: number;
 			refresh_token: string;
 			scope: string;
-		}>();
+		}>()
+		.catch(async (error) => {
+			if (!(error instanceof HTTPError)) {
+				throw error;
+			}
+			const responseData = await error.response.text();
+			console.error("failed to get token", responseData);
+			throw new Response(`failed to get token`, { status: 400 });
+		});
 
 	const discordApiToken = `${token.token_type} ${token.access_token}`;
 
@@ -60,12 +68,23 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 			`https://discord.com/api/users/@me/guilds/${env.DISCORD_SERVER_ID}/member`,
 			{ headers: { authorization: discordApiToken } }
 		)
-		.json<{ roles: string[] }>();
+		.json<{ roles: string[] }>()
+		.catch(async (error) => {
+			if (!(error instanceof HTTPError)) {
+				throw error;
+			}
+			const responseData = await error.response.text();
+			console.error("failed to get user info", responseData);
+			if (error.response.status === 404) {
+				throw new Response("not in the server", { status: 403 });
+			}
+			throw new Response("failed to get user info", { status: 400 });
+		});
 
 	const validRoleIds = env.DISCORD_VALID_ROLE_IDS.split(",");
 	const validUser = userGuild.roles.some((role) => validRoleIds.includes(role));
 	if (!validUser) {
-		return new Response("invalid user", { status: 400 });
+		throw new Response("invalid user", { status: 400 });
 	}
 
 	const sessionToken = randomBytes(200).toString("base64url");
