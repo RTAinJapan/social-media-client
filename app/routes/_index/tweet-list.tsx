@@ -4,6 +4,7 @@ import { Button, Link } from "@radix-ui/themes";
 import type { loader } from "./route";
 import { css } from "../../../styled-system/css";
 import { useTranslation } from "react-i18next";
+import { useHydrated } from "../../hooks";
 
 const DeleteTweetButton = ({ tweetId }: { tweetId: string }) => {
 	const fetcher = useFetcher();
@@ -29,6 +30,8 @@ export const TweetList = () => {
 	const setReply = useReplyStore((store) => store.setReply);
 	const reply = useReplyStore((store) => store.reply);
 	const { t } = useTranslation();
+
+	const hydrated = useHydrated();
 
 	return (
 		<div className={css({ display: "grid", gap: "8px" })}>
@@ -57,7 +60,7 @@ export const TweetList = () => {
 						})}
 					>
 						<Link href={tweet.url} target="_blank">
-							{new Date(tweet.tweetedAt).toLocaleString()}
+							{hydrated && new Date(tweet.tweetedAt).toLocaleString()}
 						</Link>
 						<Button
 							onClick={() => {
