@@ -34,7 +34,7 @@ export const meta: MetaFunction = () => [
 	{ name: "viewport", content: "width=device-width, initial-scale=1" },
 ];
 
-export const links: LinksFunction = () => [];
+export const links: LinksFunction = () => [{ rel: "icon", href: "data:," }];
 
 const Document = ({
 	children,
