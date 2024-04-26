@@ -7,7 +7,7 @@ export default defineConfig({
 	// The extension for the emitted JavaScript files
 	outExtension: "js",
 	// Where to look for your css declarations
-	include: ["./app/**/*.{ts,tsx}"],
+	include: ["./app/**/*.tsx"],
 
 	// Files to exclude
 	exclude: [],
