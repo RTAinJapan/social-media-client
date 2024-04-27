@@ -7,7 +7,7 @@ import {
 import {
 	getWaitingForConfirmationCode,
 	inputConfirmationCode,
-} from "../api/twitter/puppeteer.server";
+} from "../api/twitter.server";
 import { Form } from "@remix-run/react";
 import { Button, TextField } from "@radix-ui/themes";
 import { css } from "../../styled-system/css";

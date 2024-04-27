@@ -1,46 +1,54 @@
 import * as path from "path";
-import puppeteer from "puppeteer";
-import { env } from "../../env.server.js";
-import { prisma } from "../../prisma.server.js";
-
-const twitterUsername = env.TWITTER_USERNAME;
-const twitterPassword = env.TWITTER_PASSWORD;
-
-const browser = await puppeteer.launch({
-	headless: env.PUPPETEER_HEADLESS,
-	args: env.NODE_ENV === "production" ? ["--no-sandbox"] : [],
-	defaultViewport: {
-		width: 1920,
-		height: 1080,
-	},
-});
+import * as puppeteer from "puppeteer";
+import { env } from "../env.server.js";
+import { prisma } from "../prisma.server.js";
 
 const chromeUserAgent =
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const username = env.TWITTER_USERNAME;
+const password = env.TWITTER_PASSWORD;
+const userEmail = env.TWITTER_USER_EMAIL;
 
-const loginPage = await browser.newPage();
+let browser: puppeteer.Browser;
+let loginPage: puppeteer.Page;
+
+let twitterEnabled = false;
+export const getTwitterEnabled = () => {
+	return twitterEnabled;
+};
 
 let waitingForConfirmationCode = false;
-
 export const getWaitingForConfirmationCode = () => {
 	return waitingForConfirmationCode;
 };
 
-export const setupTwitterLogin = async () => {
+if (username && password && userEmail) {
+	twitterEnabled = true;
+
+	browser = await puppeteer.launch({
+		headless: env.PUPPETEER_HEADLESS,
+		args: env.NODE_ENV === "production" ? ["--no-sandbox"] : [],
+		defaultViewport: {
+			width: 1920,
+			height: 1080,
+		},
+	});
+
+	loginPage = await browser.newPage();
+
 	try {
 		await loginPage.setUserAgent(chromeUserAgent);
 		await loginPage.goto("https://twitter.com/login");
 
 		const usernameInput = await loginPage.waitForSelector("input[name=text]");
-		await usernameInput?.type(twitterUsername);
+		await usernameInput?.type(username);
 		await usernameInput?.press("Enter");
 
 		const passwordInput = await loginPage.waitForSelector(
 			"input[name=password]"
 		);
-		await passwordInput?.type(twitterPassword);
+		await passwordInput?.type(password);
 		await passwordInput?.press("Enter");
 
 		const abortController = new AbortController();
@@ -61,7 +69,7 @@ export const setupTwitterLogin = async () => {
 			);
 			const inputType = await input?.evaluate((el) => el.getAttribute("type"));
 			if (inputType === "email") {
-				await input?.type(env.TWITTER_USER_EMAIL);
+				await input?.type(userEmail);
 				await input?.press("Enter");
 				await loginPage.waitForNavigation();
 				console.log("Email confirmation finished");
@@ -80,7 +88,9 @@ export const setupTwitterLogin = async () => {
 	} catch (error) {
 		console.error(error);
 	}
-};
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const inputConfirmationCode = async (code: string) => {
 	if (loginPage.isClosed()) {
@@ -115,8 +125,6 @@ export const takeScreenshot = async () => {
 	await page.close();
 };
 
-const MAX_TWEETS = 5;
-
 export const getTweets = async () => {
 	const page = await browser.newPage();
 	await page.setUserAgent(chromeUserAgent);
@@ -125,11 +133,11 @@ export const getTweets = async () => {
 			width: 1920,
 			height: 1080,
 		});
-		await page.goto(`https://twitter.com/${twitterUsername}`);
+		await page.goto(`https://twitter.com/${username}`);
 		await page.waitForSelector("article[data-testid=tweet]");
 		const tweets = await page.$$("article[data-testid=tweet]");
 		await Promise.all(
-			tweets.slice(0, MAX_TWEETS).map(async (tweetElement) => {
+			tweets.slice(0, 5).map(async (tweetElement) => {
 				const textElement = await tweetElement.$("div[data-testid=tweetText]");
 				const text = await textElement?.evaluate((el) => el.textContent);
 				const timeElement = await tweetElement.waitForSelector("time");
@@ -232,7 +240,7 @@ export const deleteTweet = async (tweetId: string) => {
 	const page = await browser.newPage();
 	await page.setUserAgent(chromeUserAgent);
 	try {
-		await page.goto(`https://twitter.com/${twitterUsername}/status/${tweetId}`);
+		await page.goto(`https://twitter.com/${username}/status/${tweetId}`);
 		const menu = await page.waitForSelector("div[data-testid=caret]");
 		if (!menu) {
 			throw new Error("No menu");
@@ -269,7 +277,7 @@ export const sendReply = async (
 	const page = await browser.newPage();
 	await page.setUserAgent(chromeUserAgent);
 	try {
-		await page.goto(`https://twitter.com/${twitterUsername}/status/${tweetId}`);
+		await page.goto(`https://twitter.com/${username}/status/${tweetId}`);
 		const replyButton = await page.waitForSelector(
 			"div[data-testid=reply]:not([aria-disabled=true])"
 		);
