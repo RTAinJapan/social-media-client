@@ -18,7 +18,7 @@ import {
 	useLoaderData,
 	useRouteError,
 } from "@remix-run/react";
-import { remixI18next } from "./i18next/remix-i18next";
+import { remixI18next } from "./i18next/remix-i18next.server";
 import { useTranslation } from "react-i18next";
 import type { PropsWithChildren } from "react";
 import { ThemeProvider } from "next-themes";

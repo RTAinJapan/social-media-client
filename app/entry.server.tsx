@@ -6,7 +6,7 @@ import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
 import { createInstance } from "i18next";
-import { remixI18next } from "./i18next/remix-i18next";
+import { remixI18next } from "./i18next/remix-i18next.server";
 import { I18nextProvider, initReactI18next } from "react-i18next";
 import i18nextFsBackend from "i18next-fs-backend";
 import { i18nextOptions } from "./i18next/options";
