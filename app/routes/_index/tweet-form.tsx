@@ -1,10 +1,10 @@
 import { useReplyStore } from "./reply-store";
-import { useFetcher } from "@remix-run/react";
-import { useEffect, useId, useState } from "react";
-import { Button, TextArea } from "@radix-ui/themes";
+import { useFetcher, useLoaderData } from "@remix-run/react";
+import { useEffect, useId, useRef, useState } from "react";
+import { Button, CheckboxGroup, Link, TextArea } from "@radix-ui/themes";
 import twitterText from "twitter-text";
 import { css } from "../../../styled-system/css";
-import type { action } from "./route";
+import type { loader, action } from "./route";
 import { useTranslation } from "react-i18next";
 import { FullscreenSpinner } from "../../components/fullscreen-spinner";
 
@@ -111,27 +111,81 @@ const ReplyDisplay = () => {
 	);
 };
 
+const ServiceSelect = () => {
+	const data = useLoaderData<typeof loader>();
+	const serviceDefaultValue = [];
+	if (data.twitterUsername) {
+		serviceDefaultValue.push("twitter");
+	}
+	if (data.blueskyUsername) {
+		serviceDefaultValue.push("bluesky");
+	}
+
+	const [disableTwitter, setDisableTwitter] = useState(false);
+	const [disableBluesky, setDisableBluesky] = useState(false);
+
+	return (
+		<CheckboxGroup.Root
+			name="service"
+			defaultValue={serviceDefaultValue}
+			onValueChange={(value) => {
+				// If only one service is selected, prevent unselect the only one
+				if (value.length !== 1) {
+					setDisableTwitter(false);
+					setDisableBluesky(false);
+				} else {
+					setDisableTwitter(value[0] === "twitter");
+					setDisableBluesky(value[0] === "bluesky");
+				}
+			}}
+		>
+			{data.twitterUsername && (
+				<CheckboxGroup.Item value="twitter" disabled={disableTwitter}>
+					Twitter:&nbsp;
+					<Link
+						href={`https://twitter.com/${data.twitterUsername}`}
+						target="_blank"
+					>
+						@{data.twitterUsername}
+					</Link>
+				</CheckboxGroup.Item>
+			)}
+			{data.blueskyUsername && (
+				<CheckboxGroup.Item value="bluesky" disabled={disableBluesky}>
+					Bluesky:&nbsp;
+					<Link
+						href={`https://bsky.app/profile/${data.blueskyUsername}`}
+						target="_blank"
+					>
+						@{data.blueskyUsername}
+					</Link>
+				</CheckboxGroup.Item>
+			)}
+		</CheckboxGroup.Root>
+	);
+};
+
 export const TweetForm = () => {
 	const fetcher = useFetcher<typeof action>();
 	const sending = fetcher.state === "submitting";
-	const [formKey, setFormKey] = useState(0);
-	const clearReply = useReplyStore((store) => store.clearReply);
 	const { t } = useTranslation();
 
+	const formElementRef = useRef<HTMLFormElement>(null);
+	const clearReply = useReplyStore((store) => store.clearReply);
 	useEffect(() => {
-		if (fetcher.state === "loading" && fetcher.data) {
-			if (fetcher.data.ok) {
-				alert(`${t("tweetFinished")}: ${fetcher.data.data}`);
-				setFormKey((n) => n + 1);
-				clearReply();
-			} else {
-				alert(`${t("tweetFailed")}: ${fetcher.data.error}`);
-			}
+		if (fetcher.state === "loading" && fetcher.data?.ok) {
+			formElementRef.current?.reset();
+			clearReply();
 		}
-	}, [fetcher.state, fetcher.data, clearReply, t]);
+	}, [fetcher.state, fetcher.data?.ok, clearReply]);
 
 	return (
 		<>
+			{fetcher.data?.ok === false && (
+				<div className={css({ color: "red" })}>
+					{t("tweetFailed")}: {fetcher.data.error}
+				</div>
+			)}
 			<fetcher.Form
 				method="post"
 				encType="multipart/form-data"
@@ -139,8 +193,9 @@ export const TweetForm = () => {
 					display: "grid",
 					gap: "8px",
 				})}
-				key={formKey}
+				ref={formElementRef}
 			>
+				<ServiceSelect />
 				<ReplyDisplay />
 				<TweetTextInput />
 				<ImageFileInput />

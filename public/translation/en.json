@@ -5,7 +5,6 @@
 	"tweetFinished": "Tweeted",
 	"tweetFailed": "Failed to tweet",
 	"submit": "Submit",
-	"tweetAsAccount": "Tweet as {{account}}",
 	"signedInAs": "Signed in as {{username}}",
 	"signOut": "Sign out",
 	"delete": "Delete",

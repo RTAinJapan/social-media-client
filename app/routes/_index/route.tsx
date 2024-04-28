@@ -46,7 +46,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 			text: tweet.text,
 			tweetedAt: tweet.tweetedAt.toISOString(),
 		})),
-		twitterAccount: env.TWITTER_USERNAME,
+		twitterUsername: env.TWITTER_USERNAME,
+		blueskyUsername: env.BLUESKY_USERNAME,
 	});
 };
 
@@ -85,7 +86,6 @@ export default function IndexPage() {
 						<SignOutButton />
 					</div>
 				</div>
-				<div>{t("tweetAsAccount", { account: data.twitterAccount })}</div>
 				<TweetForm />
 				<TweetList />
 			</div>
@@ -96,6 +96,7 @@ export default function IndexPage() {
 const actionSchema = zfd.formData({
 	text: zfd.text(z.string().optional()),
 	replyToTweetId: zfd.text(z.string().optional()),
+	service: zfd.repeatableOfType(zfd.text(z.enum(["twitter", "bluesky"]))),
 });
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -113,7 +114,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 			)
 		);
 
-		const { text, replyToTweetId } = actionSchema.parse(formData);
+		const { text, replyToTweetId, service } = actionSchema.parse(formData);
+		const postOnTwitter = service.includes("twitter");
+		const postOnBluesky = service.includes("bluesky");
 
 		const files = formData.getAll("files");
 		const filePaths: string[] = [];
@@ -127,8 +130,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 			await sendReply(replyToTweetId, text ?? "", filePaths);
 		} else {
 			await Promise.all([
-				getTwitterEnabled() && tweet(text ?? "", filePaths),
-				getBlueskyEnabled() && post(text ?? "", filePaths),
+				postOnTwitter && getTwitterEnabled() && tweet(text ?? "", filePaths),
+				postOnBluesky && getBlueskyEnabled() && post(text ?? "", filePaths),
 			]);
 		}
 
