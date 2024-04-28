@@ -23,24 +23,25 @@ export const getWaitingForConfirmationCode = () => {
 	return waitingForConfirmationCode;
 };
 
+const newPage = async (url: string) => {
+	const page = await browser.newPage();
+	await page.setUserAgent(chromeUserAgent);
+	await page.goto(url);
+	return page;
+};
+
 if (username && password && userEmail) {
 	twitterEnabled = true;
 
 	browser = await puppeteer.launch({
 		headless: env.PUPPETEER_HEADLESS,
 		args: env.NODE_ENV === "production" ? ["--no-sandbox"] : [],
-		defaultViewport: {
-			width: 1920,
-			height: 1080,
-		},
+		defaultViewport: { width: 1280, height: 720 },
 	});
 
-	loginPage = await browser.newPage();
+	loginPage = await newPage("https://twitter.com/login");
 
 	try {
-		await loginPage.setUserAgent(chromeUserAgent);
-		await loginPage.goto("https://twitter.com/login");
-
 		const usernameInput = await loginPage.waitForSelector("input[name=text]");
 		await usernameInput?.type(username);
 		await usernameInput?.press("Enter");
@@ -116,8 +117,7 @@ export const takeScreenshot = async () => {
 	if (!env.PUPPETEER_SCREENSHOT_PATH) {
 		return;
 	}
-	const page = await browser.newPage();
-	await page.goto("https://twitter.com/");
+	const page = await newPage("https://twitter.com/");
 	await sleep(10_000);
 	await page.screenshot({
 		path: path.join(env.PUPPETEER_SCREENSHOT_PATH, `twitter-${Date.now()}.png`),
@@ -126,14 +126,8 @@ export const takeScreenshot = async () => {
 };
 
 export const getTweets = async () => {
-	const page = await browser.newPage();
-	await page.setUserAgent(chromeUserAgent);
+	const page = await newPage(`https://twitter.com/${username}`);
 	try {
-		await page.setViewport({
-			width: 1920,
-			height: 1080,
-		});
-		await page.goto(`https://twitter.com/${username}`);
 		await page.waitForSelector("article[data-testid=tweet]");
 		const tweets = await page.$$("article[data-testid=tweet]");
 		await Promise.all(
@@ -190,11 +184,8 @@ export const getTweets = async () => {
 };
 
 export const tweet = async (text: string, files: string[]) => {
-	const page = await browser.newPage();
-	await page.setUserAgent(chromeUserAgent);
+	const page = await newPage("https://twitter.com/");
 	try {
-		await page.goto("https://twitter.com/");
-
 		const label = await page.waitForSelector(
 			'label[data-testid="tweetTextarea_0_label"]'
 		);
@@ -237,10 +228,10 @@ export const tweet = async (text: string, files: string[]) => {
 };
 
 export const deleteTweet = async (tweetId: string) => {
-	const page = await browser.newPage();
-	await page.setUserAgent(chromeUserAgent);
+	const page = await newPage(
+		`https://twitter.com/${username}/status/${tweetId}`
+	);
 	try {
-		await page.goto(`https://twitter.com/${username}/status/${tweetId}`);
 		const menu = await page.waitForSelector("div[data-testid=caret]");
 		if (!menu) {
 			throw new Error("No menu");
@@ -274,10 +265,10 @@ export const sendReply = async (
 	text: string,
 	files: string[]
 ) => {
-	const page = await browser.newPage();
-	await page.setUserAgent(chromeUserAgent);
+	const page = await newPage(
+		`https://twitter.com/${username}/status/${tweetId}`
+	);
 	try {
-		await page.goto(`https://twitter.com/${username}/status/${tweetId}`);
 		const replyButton = await page.waitForSelector(
 			"div[data-testid=reply]:not([aria-disabled=true])"
 		);
