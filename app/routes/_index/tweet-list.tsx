@@ -1,6 +1,6 @@
 import { useReplyStore } from "./reply-store";
 import { useFetcher, useLoaderData } from "@remix-run/react";
-import { Button, Link } from "@radix-ui/themes";
+import { Button, Card, Link } from "@radix-ui/themes";
 import type { loader } from "./route";
 import { css } from "../../../styled-system/css";
 import { useTranslation } from "react-i18next";
@@ -36,42 +36,36 @@ export const TweetList = () => {
 	return (
 		<div className={css({ display: "grid", gap: "8px" })}>
 			{data.tweets.map((tweet) => (
-				<div
+				<Card
 					key={tweet.url}
-					className={css(
-						{
-							padding: "4px",
-							border: "1px solid black",
-							display: "grid",
-							gap: "4px",
-						},
-						reply === tweet.id && { border: "2px solid red" }
-					)}
+					className={css(reply === tweet.id && { border: "1px solid red" })}
 				>
-					<div>{tweet.text}</div>
-					<div
-						className={css({
-							display: "grid",
-							gap: "2px",
-							gridAutoFlow: "column",
-							alignItems: "end",
-							gridTemplateColumns: "1fr auto auto",
-							justifyItems: "start",
-						})}
-					>
-						<Link href={tweet.url} target="_blank">
-							{hydrated && new Date(tweet.tweetedAt).toLocaleString()}
-						</Link>
-						<Button
-							onClick={() => {
-								setReply(tweet.id);
-							}}
+					<div className={css({ display: "grid", gap: "4px" })}>
+						<div>{tweet.text}</div>
+						<div
+							className={css({
+								display: "grid",
+								gap: "2px",
+								gridAutoFlow: "column",
+								alignItems: "end",
+								gridTemplateColumns: "1fr auto auto",
+								justifyItems: "start",
+							})}
 						>
-							{t("reply")}
-						</Button>
-						<DeleteTweetButton tweetId={tweet.id} />
+							<Link href={tweet.url} target="_blank">
+								{hydrated && new Date(tweet.tweetedAt).toLocaleString()}
+							</Link>
+							<Button
+								onClick={() => {
+									setReply(tweet.id);
+								}}
+							>
+								{t("reply")}
+							</Button>
+							<DeleteTweetButton tweetId={tweet.id} />
+						</div>
 					</div>
-				</div>
+				</Card>
 			))}
 		</div>
 	);

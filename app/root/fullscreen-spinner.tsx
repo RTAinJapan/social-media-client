@@ -10,7 +10,7 @@ export const FullscreenSpinner = () => {
 	return (
 		<div
 			className={css({
-				position: "absolute",
+				position: "fixed",
 				top: 0,
 				left: 0,
 				width: "100vw",

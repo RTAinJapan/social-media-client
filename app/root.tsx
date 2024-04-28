@@ -22,6 +22,7 @@ import { remixI18next } from "./i18next/remix-i18next";
 import { useTranslation } from "react-i18next";
 import { FullscreenSpinner } from "./root/fullscreen-spinner";
 import type { PropsWithChildren } from "react";
+import { ThemeProvider } from "next-themes";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const locale = await remixI18next.getLocale(request);
@@ -48,7 +49,9 @@ const Document = ({
 				<Links />
 			</head>
 			<body>
-				{children}
+				<ThemeProvider attribute="class">
+					<Theme>{children}</Theme>
+				</ThemeProvider>
 				<ScrollRestoration />
 				<Scripts />
 			</body>
@@ -60,10 +63,8 @@ export default function Root() {
 	const data = useLoaderData<typeof loader>();
 	return (
 		<Document locale={data.locale}>
-			<Theme>
-				<Outlet />
-				<FullscreenSpinner />
-			</Theme>
+			<Outlet />
+			<FullscreenSpinner />
 		</Document>
 	);
 }
