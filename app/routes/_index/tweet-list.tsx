@@ -4,7 +4,7 @@ import { Button, Card, Link } from "@radix-ui/themes";
 import type { loader } from "./route";
 import { css } from "../../../styled-system/css";
 import { useTranslation } from "react-i18next";
-import { useHydrated } from "../../hooks";
+import { ClientOnly } from "../../components/client-only";
 
 const DeleteTweetButton = ({ tweetId }: { tweetId: string }) => {
 	const fetcher = useFetcher();
@@ -31,8 +31,6 @@ export const TweetList = () => {
 	const reply = useReplyStore((store) => store.reply);
 	const { t } = useTranslation();
 
-	const hydrated = useHydrated();
-
 	return (
 		<div className={css({ display: "grid", gap: "8px" })}>
 			{data.tweets.map((tweet) => (
@@ -45,15 +43,20 @@ export const TweetList = () => {
 						<div
 							className={css({
 								display: "grid",
-								gap: "2px",
+								gap: "4px",
 								gridAutoFlow: "column",
-								alignItems: "end",
 								gridTemplateColumns: "1fr auto auto",
-								justifyItems: "start",
+								alignItems: "end",
 							})}
 						>
-							<Link href={tweet.url} target="_blank">
-								{hydrated && new Date(tweet.tweetedAt).toLocaleString()}
+							<Link
+								href={tweet.url}
+								target="_blank"
+								className={css({ display: "grid" })}
+							>
+								<ClientOnly>
+									{new Date(tweet.tweetedAt).toLocaleString()}
+								</ClientOnly>
 							</Link>
 							<Button
 								onClick={() => {

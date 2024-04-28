@@ -5,7 +5,7 @@ export const action = async () => {
 	const setCookie = await sessionCookie.serialize("", {
 		maxAge: 0,
 	});
-	throw redirect("/", {
+	throw redirect("/sign-in", {
 		headers: {
 			"Set-Cookie": setCookie,
 		},

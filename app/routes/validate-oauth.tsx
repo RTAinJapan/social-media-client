@@ -1,11 +1,9 @@
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { discordOauthStateCookie, sessionCookie } from "../cookies.server";
 import { env } from "../env.server";
 import ky, { HTTPError } from "ky";
 import { randomBytes } from "node:crypto";
 import { prisma } from "../prisma.server";
-import { useEffect } from "react";
-import { useNavigate } from "@remix-run/react";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const url = new URL(request.url);
@@ -97,16 +95,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 	const setCookie = await sessionCookie.serialize(sessionToken);
 
-	return json(null, {
+	throw redirect("/", {
 		headers: {
 			"Set-Cookie": setCookie,
 		},
 	});
 };
-
-export default function ValidateOauthPage() {
-	const navigate = useNavigate();
-	useEffect(() => {
-		navigate("/");
-	}, [navigate]);
-}

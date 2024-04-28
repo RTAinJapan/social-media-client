@@ -20,7 +20,6 @@ import {
 } from "@remix-run/react";
 import { remixI18next } from "./i18next/remix-i18next";
 import { useTranslation } from "react-i18next";
-import { FullscreenSpinner } from "./root/fullscreen-spinner";
 import type { PropsWithChildren } from "react";
 import { ThemeProvider } from "next-themes";
 
@@ -50,7 +49,10 @@ const Document = ({
 			</head>
 			<body>
 				<ThemeProvider attribute="class">
-					<Theme>{children}</Theme>
+					<Theme>
+						{children}
+						<div id="spinner-portal" />
+					</Theme>
 				</ThemeProvider>
 				<ScrollRestoration />
 				<Scripts />
@@ -64,7 +66,6 @@ export default function Root() {
 	return (
 		<Document locale={data.locale}>
 			<Outlet />
-			<FullscreenSpinner />
 		</Document>
 	);
 }
