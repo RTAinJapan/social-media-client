@@ -26,6 +26,7 @@ import { tmpDir } from "../../tmp-dir.server";
 import { useTranslation } from "react-i18next";
 import { SignOutButton } from "./sign-out-button";
 import { getBlueskyEnabled, post } from "../../api/bluesky.server";
+import fs from "node:fs/promises";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const [session, tweets] = await Promise.all([
@@ -130,6 +131,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 				getBlueskyEnabled() && post(text ?? "", filePaths),
 			]);
 		}
+
+		await Promise.all(filePaths.map((filePath) => fs.rm(filePath)));
 
 		await getTweets().catch((error) => {
 			console.error(error);
