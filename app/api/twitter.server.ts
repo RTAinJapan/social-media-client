@@ -36,7 +36,7 @@ if (username && password && userEmail) {
 	browser = await puppeteer.launch({
 		headless: env.PUPPETEER_HEADLESS,
 		args: env.NODE_ENV === "production" ? ["--no-sandbox"] : [],
-		defaultViewport: { width: 1280, height: 720 },
+		defaultViewport: { width: 1920, height: 1080 },
 	});
 
 	loginPage = await newPage("https://twitter.com/login");
@@ -61,6 +61,7 @@ if (username && password && userEmail) {
 				abortController.abort();
 				await loginPage.close();
 			}
+			await getTweets();
 		};
 
 		const confirmation = async () => {
@@ -128,10 +129,11 @@ export const takeScreenshot = async () => {
 export const getTweets = async () => {
 	const page = await newPage(`https://twitter.com/${username}`);
 	try {
+		await page.setViewport({ width: 1280, height: 2000 });
 		await page.waitForSelector("article[data-testid=tweet]");
 		const tweets = await page.$$("article[data-testid=tweet]");
 		await Promise.all(
-			tweets.slice(0, 5).map(async (tweetElement) => {
+			tweets.slice(0, 10).map(async (tweetElement) => {
 				const textElement = await tweetElement.$("div[data-testid=tweetText]");
 				const text = await textElement?.evaluate((el) => el.textContent);
 				const timeElement = await tweetElement.waitForSelector("time");
@@ -214,6 +216,7 @@ export const tweet = async (text: string, files: string[]) => {
 		}
 		await tweetButton.click({ count: 2 });
 		await page.waitForSelector("div[data-testid=toast]");
+		await getTweets();
 	} catch (error) {
 		if (env.PUPPETEER_SCREENSHOT_PATH) {
 			await page.screenshot({
@@ -304,6 +307,7 @@ export const sendReply = async (
 		}
 		await tweetButton.click({ count: 2 });
 		await page.waitForSelector("div[data-testid=toast]");
+		await getTweets();
 	} finally {
 		await page.close();
 	}

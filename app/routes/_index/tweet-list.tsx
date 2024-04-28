@@ -1,45 +1,110 @@
 import { useReplyStore } from "./reply-store";
 import { useFetcher, useLoaderData } from "@remix-run/react";
-import { Button, Card, Link } from "@radix-ui/themes";
+import { Avatar, Button, Card } from "@radix-ui/themes";
 import type { loader } from "./route";
 import { css } from "../../../styled-system/css";
 import { useTranslation } from "react-i18next";
 import { ClientOnly } from "../../components/client-only";
+import twitterLogo from "./twitter-logo.png";
+import blueskyLogo from "./bluesky-logo.png";
+import { FullscreenSpinner } from "../../components/fullscreen-spinner";
 
-const DeleteTweetButton = ({ tweetId }: { tweetId: string }) => {
+const DeletePostButton = ({
+	twitterId,
+	blueskyId,
+}: {
+	twitterId?: string;
+	blueskyId?: string;
+}) => {
 	const fetcher = useFetcher();
 	const { t } = useTranslation();
+	const sending = fetcher.state === "submitting";
 
 	return (
-		<fetcher.Form
-			method="post"
-			action={`/delete-tweet/${tweetId}`}
-			onSubmit={(e) => {
-				if (!confirm("Are you sure to delete this tweet?")) {
-					e.preventDefault();
-				}
-			}}
-		>
-			<Button type="submit">{t("delete")}</Button>
-		</fetcher.Form>
+		<>
+			<fetcher.Form
+				method="post"
+				action={`/delete-post`}
+				onSubmit={(e) => {
+					if (!confirm("Are you sure to delete this post?")) {
+						e.preventDefault();
+					}
+				}}
+			>
+				{twitterId && (
+					<input type="hidden" name="twitterId" value={twitterId} />
+				)}
+				{blueskyId && (
+					<input type="hidden" name="blueskyId" value={blueskyId} />
+				)}
+				<Button type="submit">{t("delete")}</Button>
+			</fetcher.Form>
+			<FullscreenSpinner show={sending} />
+		</>
 	);
 };
 
 export const TweetList = () => {
 	const data = useLoaderData<typeof loader>();
 	const setReply = useReplyStore((store) => store.setReply);
-	const reply = useReplyStore((store) => store.reply);
+	const replyTwitterId = useReplyStore((store) => store.twitterId);
+	const replyBlueskyId = useReplyStore((store) => store.blueskyId);
 	const { t } = useTranslation();
 
 	return (
 		<div className={css({ display: "grid", gap: "8px" })}>
-			{data.tweets.map((tweet) => (
+			{data.posts.map((post) => (
 				<Card
-					key={tweet.url}
-					className={css(reply === tweet.id && { border: "1px solid red" })}
+					key={(post.twitterId ?? "") + (post.blueskyId ?? "")}
+					className={css(
+						((typeof post.twitterId === "string" &&
+							replyTwitterId === post.twitterId) ||
+							(typeof post.blueskyId === "string" &&
+								replyBlueskyId === post.blueskyId)) && {
+							border: "1px solid red",
+						}
+					)}
 				>
-					<div className={css({ display: "grid", gap: "4px" })}>
-						<div>{tweet.text}</div>
+					<div className={css({ display: "grid", gap: "8px" })}>
+						<div
+							className={css({
+								display: "grid",
+								gap: "8px",
+								gridAutoFlow: "column",
+								justifyContent: "start",
+								alignItems: "center",
+							})}
+						>
+							{post.twitterId && (
+								<a
+									href={`https://twitter.com/${data.twitterUsername}/status/${post.twitterId}`}
+									target="_blank"
+								>
+									<Avatar
+										src={twitterLogo}
+										fallback="Twitter"
+										alt="Twitter"
+										size="1"
+									/>
+								</a>
+							)}
+							{post.blueskyId && (
+								<a
+									href={`https://bsky.app/profile/${
+										data.blueskyUsername
+									}/post/${post.blueskyId.split("/").at(-1)}`}
+									target="_blank"
+								>
+									<Avatar
+										src={blueskyLogo}
+										fallback="Bluesky"
+										alt="Bluesky"
+										size="1"
+									/>
+								</a>
+							)}
+						</div>
+						<div>{post.text}</div>
 						<div
 							className={css({
 								display: "grid",
@@ -49,23 +114,25 @@ export const TweetList = () => {
 								alignItems: "end",
 							})}
 						>
-							<Link
-								href={tweet.url}
-								target="_blank"
-								className={css({ display: "grid" })}
-							>
+							<div className={css({ display: "grid" })}>
 								<ClientOnly>
-									{new Date(tweet.tweetedAt).toLocaleString()}
+									{new Date(post.postedAt).toLocaleString()}
 								</ClientOnly>
-							</Link>
+							</div>
 							<Button
 								onClick={() => {
-									setReply(tweet.id);
+									setReply({
+										twitterId: post.twitterId,
+										blueskyId: post.blueskyId,
+									});
 								}}
 							>
 								{t("reply")}
 							</Button>
-							<DeleteTweetButton tweetId={tweet.id} />
+							<DeletePostButton
+								twitterId={post.twitterId}
+								blueskyId={post.blueskyId}
+							/>
 						</div>
 					</div>
 				</Card>

@@ -16,36 +16,68 @@ import {
 } from "@remix-run/node";
 import { zfd } from "zod-form-data";
 import { z } from "zod";
-import {
-	getTweets,
-	getTwitterEnabled,
-	sendReply,
-	tweet,
-} from "../../api/twitter.server";
+import { getTwitterEnabled, sendReply, tweet } from "../../api/twitter.server";
 import { tmpDir } from "../../tmp-dir.server";
 import { useTranslation } from "react-i18next";
 import { SignOutButton } from "./sign-out-button";
 import { getBlueskyEnabled, post } from "../../api/bluesky.server";
 import fs from "node:fs/promises";
 
+interface Post {
+	twitterId?: string;
+	blueskyId?: string;
+	text: string;
+	postedAt: Date;
+}
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const [session, tweets] = await Promise.all([
+	const [session, tweets, blueskyPosts] = await Promise.all([
 		assertSession(request),
 		prisma.tweets.findMany({
 			orderBy: {
 				tweetedAt: "desc",
 			},
-			take: 10,
+			take: 100,
+		}),
+		prisma.blueskyPosts.findMany({
+			orderBy: {
+				postedAt: "desc",
+			},
+			take: 100,
 		}),
 	]);
+
+	const posts: Post[] = [];
+	for (const tweet of tweets) {
+		posts.push({
+			twitterId: tweet.tweetId,
+			text: tweet.text,
+			postedAt: tweet.tweetedAt,
+		});
+	}
+	for (const blueskyPost of blueskyPosts) {
+		const postWithSameText = posts.find(
+			(p) =>
+				p.text === blueskyPost.text &&
+				Math.abs(p.postedAt.getTime() - blueskyPost.postedAt.getTime()) <
+					60 * 1000
+		);
+		if (postWithSameText) {
+			postWithSameText.blueskyId = blueskyPost.postId;
+		} else {
+			posts.push({
+				blueskyId: blueskyPost.postId,
+				text: blueskyPost.text,
+				postedAt: blueskyPost.postedAt,
+			});
+		}
+	}
+
+	posts.sort((a, b) => b.postedAt.getTime() - a.postedAt.getTime());
+
 	return json({
 		session,
-		tweets: tweets.map((tweet) => ({
-			id: tweet.tweetId,
-			url: `https://twitter.com/${env.TWITTER_USERNAME}/status/${tweet.tweetId}`,
-			text: tweet.text,
-			tweetedAt: tweet.tweetedAt.toISOString(),
-		})),
+		posts,
 		twitterUsername: env.TWITTER_USERNAME,
 		blueskyUsername: env.BLUESKY_USERNAME,
 	});
@@ -94,9 +126,10 @@ export default function IndexPage() {
 }
 
 const actionSchema = zfd.formData({
-	text: zfd.text(z.string().optional()),
-	replyToTweetId: zfd.text(z.string().optional()),
+	text: zfd.text(z.string()).optional(),
 	service: zfd.repeatableOfType(zfd.text(z.enum(["twitter", "bluesky"]))),
+	replyTwitterId: zfd.text(z.string()).optional(),
+	replyBlueskyId: zfd.text(z.string()).optional(),
 });
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -114,7 +147,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 			)
 		);
 
-		const { text, replyToTweetId, service } = actionSchema.parse(formData);
+		const { text, service, replyTwitterId, replyBlueskyId } =
+			actionSchema.parse(formData);
+
 		const postOnTwitter = service.includes("twitter");
 		const postOnBluesky = service.includes("bluesky");
 
@@ -126,8 +161,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 			}
 		}
 
-		if (replyToTweetId) {
-			await sendReply(replyToTweetId, text ?? "", filePaths);
+		if (
+			typeof replyTwitterId === "string" ||
+			typeof replyBlueskyId === "string"
+		) {
+			await Promise.all([
+				postOnTwitter &&
+					replyTwitterId &&
+					getTwitterEnabled() &&
+					sendReply(replyTwitterId, text ?? "", filePaths),
+				postOnBluesky &&
+					replyBlueskyId &&
+					getBlueskyEnabled() &&
+					post(text ?? "", filePaths, replyBlueskyId),
+			]);
 		} else {
 			await Promise.all([
 				postOnTwitter && getTwitterEnabled() && tweet(text ?? "", filePaths),
@@ -136,10 +183,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 		}
 
 		await Promise.all(filePaths.map((filePath) => fs.rm(filePath)));
-
-		await getTweets().catch((error) => {
-			console.error(error);
-		});
 
 		return json({ ok: true, data: text } as const);
 	} catch (error) {

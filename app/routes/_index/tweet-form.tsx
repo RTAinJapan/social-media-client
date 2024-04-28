@@ -80,11 +80,12 @@ const ImageFileInput = () => {
 };
 
 const ReplyDisplay = () => {
-	const reply = useReplyStore((store) => store.reply);
+	const replyTwitterId = useReplyStore((store) => store.twitterId);
+	const replyBlueskyId = useReplyStore((store) => store.blueskyId);
 	const clearReply = useReplyStore((store) => store.clearReply);
 	const { t } = useTranslation();
 
-	if (!reply) {
+	if (!replyTwitterId && !replyBlueskyId) {
 		return;
 	}
 
@@ -98,7 +99,8 @@ const ReplyDisplay = () => {
 				alignItems: "center",
 			})}
 		>
-			<input type="hidden" name="replyToTweetId" value={reply} />
+			<input type="hidden" name="replyTwitterId" value={replyTwitterId} />
+			<input type="hidden" name="replyBlueskyId" value={replyBlueskyId} />
 			<div>{t("tweetAsReply")}</div>
 			<Button
 				onClick={() => {
@@ -121,26 +123,10 @@ const ServiceSelect = () => {
 		serviceDefaultValue.push("bluesky");
 	}
 
-	const [disableTwitter, setDisableTwitter] = useState(false);
-	const [disableBluesky, setDisableBluesky] = useState(false);
-
 	return (
-		<CheckboxGroup.Root
-			name="service"
-			defaultValue={serviceDefaultValue}
-			onValueChange={(value) => {
-				// If only one service is selected, prevent unselect the only one
-				if (value.length !== 1) {
-					setDisableTwitter(false);
-					setDisableBluesky(false);
-				} else {
-					setDisableTwitter(value[0] === "twitter");
-					setDisableBluesky(value[0] === "bluesky");
-				}
-			}}
-		>
+		<CheckboxGroup.Root name="service" defaultValue={serviceDefaultValue}>
 			{data.twitterUsername && (
-				<CheckboxGroup.Item value="twitter" disabled={disableTwitter}>
+				<CheckboxGroup.Item value="twitter">
 					Twitter:&nbsp;
 					<Link
 						href={`https://twitter.com/${data.twitterUsername}`}
@@ -151,7 +137,7 @@ const ServiceSelect = () => {
 				</CheckboxGroup.Item>
 			)}
 			{data.blueskyUsername && (
-				<CheckboxGroup.Item value="bluesky" disabled={disableBluesky}>
+				<CheckboxGroup.Item value="bluesky">
 					Bluesky:&nbsp;
 					<Link
 						href={`https://bsky.app/profile/${data.blueskyUsername}`}

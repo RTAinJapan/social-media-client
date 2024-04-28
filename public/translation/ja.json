@@ -1,7 +1,7 @@
 {
 	"uploadMedia": "画像・動画を添付",
 	"clear": "クリア",
-	"tweetAsReply": "返信としてツイート",
+	"tweetAsReply": "リプライとして送信",
 	"tweetFinished": "ツイートしました",
 	"tweetFailed": "ツイートに失敗しました",
 	"submit": "送信",
