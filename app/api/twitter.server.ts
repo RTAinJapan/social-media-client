@@ -178,6 +178,8 @@ export const getTweets = async () => {
 				});
 			})
 		);
+	} catch (error) {
+		console.error("error in getTweets", error);
 	} finally {
 		await page.close();
 	}
