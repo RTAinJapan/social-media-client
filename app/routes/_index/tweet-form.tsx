@@ -1,6 +1,6 @@
 import { useReplyStore } from "./reply-store";
 import { useFetcher, useLoaderData } from "@remix-run/react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Button, CheckboxGroup, Link, TextArea } from "@radix-ui/themes";
 import twitterText from "twitter-text";
 import { css } from "../../../styled-system/css";
@@ -156,11 +156,11 @@ export const TweetForm = () => {
 	const sending = fetcher.state === "submitting";
 	const { t } = useTranslation();
 
-	const formElementRef = useRef<HTMLFormElement>(null);
+	const [formKey, setFormKey] = useState(0);
 	const clearReply = useReplyStore((store) => store.clearReply);
 	useEffect(() => {
 		if (fetcher.state === "loading" && fetcher.data?.ok) {
-			formElementRef.current?.reset();
+			setFormKey((key) => key + 1);
 			clearReply();
 		}
 	}, [fetcher.state, fetcher.data?.ok, clearReply]);
@@ -179,7 +179,7 @@ export const TweetForm = () => {
 					display: "grid",
 					gap: "8px",
 				})}
-				ref={formElementRef}
+				key={formKey}
 			>
 				<ServiceSelect />
 				<ReplyDisplay />
