@@ -41,6 +41,8 @@ if (username && password && userEmail) {
 
 	loginPage = await newPage("https://twitter.com/login");
 
+	const abortController = new AbortController();
+
 	try {
 		const usernameInput = await loginPage.waitForSelector("input[name=text]");
 		await usernameInput?.type(username);
@@ -51,8 +53,6 @@ if (username && password && userEmail) {
 		);
 		await passwordInput?.type(password);
 		await passwordInput?.press("Enter");
-
-		const abortController = new AbortController();
 
 		const waitForFinish = async () => {
 			await loginPage.waitForNavigation();
@@ -73,8 +73,8 @@ if (username && password && userEmail) {
 			if (inputType === "email") {
 				await input?.type(userEmail);
 				await input?.press("Enter");
-				await loginPage.waitForNavigation();
 				console.log("Email confirmation finished");
+				await loginPage.waitForNavigation();
 				if (!abortController.signal.aborted) {
 					abortController.abort();
 					await loginPage.close();
@@ -88,7 +88,9 @@ if (username && password && userEmail) {
 
 		await Promise.race([waitForFinish(), confirmation()]);
 	} catch (error) {
-		console.error(error);
+		if (!abortController.signal.aborted) {
+			console.error(error);
+		}
 	}
 }
 

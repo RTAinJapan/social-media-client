@@ -104,7 +104,7 @@ export const TweetList = () => {
 								</a>
 							)}
 						</div>
-						<div>{post.text}</div>
+						<div className={css({ lineBreak: "anywhere" })}>{post.text}</div>
 						<div
 							className={css({
 								display: "grid",
