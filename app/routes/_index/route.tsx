@@ -126,10 +126,10 @@ export default function IndexPage() {
 }
 
 const actionSchema = zfd.formData({
-	text: zfd.text(z.string()).optional(),
+	text: zfd.text(z.string().optional()),
 	service: zfd.repeatableOfType(zfd.text(z.enum(["twitter", "bluesky"]))),
-	replyTwitterId: zfd.text(z.string()).optional(),
-	replyBlueskyId: zfd.text(z.string()).optional(),
+	replyTwitterId: zfd.text(z.string().optional()),
+	replyBlueskyId: zfd.text(z.string().optional()),
 });
 
 export const action = async ({ request }: ActionFunctionArgs) => {
