@@ -58,7 +58,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 	for (const blueskyPost of blueskyPosts) {
 		const postWithSameText = posts.find(
 			(p) =>
-				p.text === blueskyPost.text &&
+				p.text.replace(/\r?\n/g, "") ===
+					blueskyPost.text.replace(/\r?\n/g, "") &&
 				Math.abs(p.postedAt.getTime() - blueskyPost.postedAt.getTime()) <
 					60 * 1000
 		);
