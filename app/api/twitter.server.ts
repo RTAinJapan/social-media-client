@@ -165,18 +165,17 @@ export const getTweets = async () => {
 					throw new Error("No tweet ID");
 				}
 
-				const tweetText = text?.replace(/\n/g, " ");
 				const tweetTime = new Date(time);
 
 				await prisma.tweets.upsert({
 					where: { tweetId: id },
 					create: {
 						tweetId: id,
-						text: tweetText ?? "",
+						text: text ?? "",
 						tweetedAt: tweetTime,
 					},
 					update: {
-						text: tweetText,
+						text: text ?? undefined,
 						tweetedAt: tweetTime,
 					},
 				});
