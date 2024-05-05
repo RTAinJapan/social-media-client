@@ -8,6 +8,21 @@ import { ClientOnly } from "../../components/client-only";
 import twitterLogo from "./twitter-logo.png";
 import blueskyLogo from "./bluesky-logo.png";
 import { FullscreenSpinner } from "../../components/fullscreen-spinner";
+import { Fragment } from "react";
+
+const PostBodyText = ({ children }: { children: string }) => {
+	const lines = children.split(/\r?\n/g);
+	return (
+		<div className={css({ overflowWrap: "anywhere" })}>
+			{lines.map((line, i) => (
+				<Fragment key={i}>
+					{i > 0 && <br />}
+					{line}
+				</Fragment>
+			))}
+		</div>
+	);
+};
 
 const DeletePostButton = ({
 	twitterId,
@@ -104,7 +119,7 @@ export const TweetList = () => {
 								</a>
 							)}
 						</div>
-						<div className={css({ lineBreak: "anywhere" })}>{post.text}</div>
+						<PostBodyText>{post.text}</PostBodyText>
 						<div
 							className={css({
 								display: "grid",
