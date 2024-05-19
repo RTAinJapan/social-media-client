@@ -3,6 +3,8 @@ import * as puppeteer from "puppeteer";
 import { env } from "../env.server.js";
 import { prisma } from "../prisma.server.js";
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const chromeUserAgent =
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
@@ -106,8 +108,6 @@ if (username && password && userEmail) {
 		}
 	}
 }
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const inputConfirmationCode = async (code: string) => {
 	if (loginPage.isClosed()) {
