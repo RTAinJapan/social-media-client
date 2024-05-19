@@ -66,6 +66,8 @@ COPY --from=build /app/node_modules/.prisma node_modules/.prisma
 COPY --from=build /app/node_modules/@prisma/client node_modules/@prisma/client
 COPY --from=build /app/build build
 
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+
 ENV NODE_ENV=production
 ENV PUPPETEER_HEADLESS=true
 
