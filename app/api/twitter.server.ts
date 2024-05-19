@@ -32,15 +32,19 @@ const newPage = async (url: string) => {
 	return page;
 };
 
-export const takeScreenshot = async () => {
+const screenshot = async (page: puppeteer.Page) => {
 	if (!env.PUPPETEER_SCREENSHOT_PATH) {
 		return;
 	}
-	const page = await newPage("https://twitter.com/");
-	await sleep(10_000);
 	await page.screenshot({
 		path: path.join(env.PUPPETEER_SCREENSHOT_PATH, `twitter-${Date.now()}.png`),
 	});
+};
+
+export const takeScreenshot = async () => {
+	const page = await newPage("https://twitter.com/");
+	await sleep(10_000);
+	await screenshot(page);
 	await page.close();
 };
 
@@ -71,7 +75,7 @@ if (username && password && userEmail) {
 		const waitForFinish = async () => {
 			await loginPage.waitForNavigation();
 			console.log("Login finished");
-			await takeScreenshot();
+			await screenshot(loginPage);
 			if (!abortController.signal.aborted) {
 				abortController.abort();
 				await loginPage.close();
