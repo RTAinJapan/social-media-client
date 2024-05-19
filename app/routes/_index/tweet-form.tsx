@@ -128,10 +128,7 @@ const ServiceSelect = () => {
 			{data.twitterUsername && (
 				<CheckboxGroup.Item value="twitter">
 					Twitter:&nbsp;
-					<Link
-						href={`https://twitter.com/${data.twitterUsername}`}
-						target="_blank"
-					>
+					<Link href={`https://x.com/${data.twitterUsername}`} target="_blank">
 						@{data.twitterUsername}
 					</Link>
 				</CheckboxGroup.Item>

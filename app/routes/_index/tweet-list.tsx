@@ -92,7 +92,7 @@ export const TweetList = () => {
 						>
 							{post.twitterId && (
 								<a
-									href={`https://twitter.com/${data.twitterUsername}/status/${post.twitterId}`}
+									href={`https://x.com/${data.twitterUsername}/status/${post.twitterId}`}
 									target="_blank"
 								>
 									<Avatar

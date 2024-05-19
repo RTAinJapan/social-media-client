@@ -8,6 +8,8 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const chromeUserAgent =
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
+const textAreaSelector = 'div[data-testid="tweetTextarea_0"]';
+
 const username = env.TWITTER_USERNAME;
 const password = env.TWITTER_PASSWORD;
 const userEmail = env.TWITTER_USER_EMAIL;
@@ -42,7 +44,7 @@ const screenshot = async (page: puppeteer.Page) => {
 };
 
 export const takeScreenshot = async () => {
-	const page = await newPage("https://twitter.com/");
+	const page = await newPage("https://x.com/");
 	await sleep(10_000);
 	await screenshot(page);
 	await page.close();
@@ -57,7 +59,7 @@ if (username && password && userEmail) {
 		defaultViewport: { width: 1920, height: 1080 },
 	});
 
-	loginPage = await newPage("https://twitter.com/login");
+	loginPage = await newPage("https://x.com/login");
 
 	let recorder: puppeteer.ScreenRecorder | undefined;
 
@@ -85,7 +87,7 @@ if (username && password && userEmail) {
 
 		const waitForFinish = async () => {
 			await loginPage.waitForNavigation();
-			await sleep(10_000);
+			await loginPage.waitForSelector(textAreaSelector);
 			console.log("Login finished");
 			if (!abortController.signal.aborted) {
 				abortController.abort();
@@ -105,6 +107,7 @@ if (username && password && userEmail) {
 				await input?.press("Enter");
 				console.log("Email confirmation finished");
 				await loginPage.waitForNavigation();
+				await loginPage.waitForSelector(textAreaSelector);
 				if (!abortController.signal.aborted) {
 					abortController.abort();
 					await loginPage.close();
@@ -149,7 +152,7 @@ export const inputConfirmationCode = async (code: string) => {
 };
 
 export const getTweets = async () => {
-	const page = await newPage(`https://twitter.com/${username}`);
+	const page = await newPage(`https://x.com/${username}`);
 	try {
 		await page.setViewport({ width: 1280, height: 2000 });
 		await page.waitForSelector("article[data-testid=tweet]");
@@ -209,16 +212,14 @@ export const getTweets = async () => {
 };
 
 export const tweet = async (text: string, files: string[]) => {
-	const page = await newPage("https://twitter.com/");
+	const page = await newPage("https://x.com/");
 	try {
-		const label = await page.waitForSelector(
-			'label[data-testid="tweetTextarea_0_label"]'
-		);
-		if (!label) {
+		const input = await page.waitForSelector(textAreaSelector);
+		if (!input) {
 			throw new Error("No tweet input label");
 		}
-		await label.click({ count: 3 });
-		await label.type(text);
+		await input.click({ count: 3 });
+		await input.type(text);
 
 		if (files.length >= 1) {
 			const fileInput = await page.waitForSelector("input[type=file]");
@@ -230,7 +231,7 @@ export const tweet = async (text: string, files: string[]) => {
 		}
 
 		const tweetButton = await page.waitForSelector(
-			'div[data-testid="tweetButtonInline"]:not([aria-disabled="true"])'
+			'button[data-testid="tweetButtonInline"]:not([aria-disabled="true"])'
 		);
 		if (!tweetButton) {
 			throw new Error("No tweet button");
@@ -254,11 +255,9 @@ export const tweet = async (text: string, files: string[]) => {
 };
 
 export const deleteTweet = async (tweetId: string) => {
-	const page = await newPage(
-		`https://twitter.com/${username}/status/${tweetId}`
-	);
+	const page = await newPage(`https://x.com/${username}/status/${tweetId}`);
 	try {
-		const menu = await page.waitForSelector("div[data-testid=caret]");
+		const menu = await page.waitForSelector("button[data-testid=caret]");
 		if (!menu) {
 			throw new Error("No menu");
 		}
@@ -273,14 +272,13 @@ export const deleteTweet = async (tweetId: string) => {
 		await deleteOption.click();
 		await sleep(500);
 		const confirmButton = await page.waitForSelector(
-			"div[data-testid=confirmationSheetConfirm]"
+			"button[data-testid=confirmationSheetConfirm]"
 		);
 		if (!confirmButton) {
 			throw new Error("No confirm button");
 		}
 		await confirmButton.click();
 		await sleep(500);
-		await page.waitForNetworkIdle();
 	} finally {
 		await page.close();
 	}
@@ -291,12 +289,10 @@ export const sendReply = async (
 	text: string,
 	files: string[]
 ) => {
-	const page = await newPage(
-		`https://twitter.com/${username}/status/${tweetId}`
-	);
+	const page = await newPage(`https://x.com/${username}/status/${tweetId}`);
 	try {
 		const replyButton = await page.waitForSelector(
-			"div[data-testid=reply]:not([aria-disabled=true])"
+			"button[data-testid=reply]:not([aria-disabled=true])"
 		);
 		if (!replyButton) {
 			throw new Error("No reply button");
@@ -312,16 +308,14 @@ export const sendReply = async (
 			await fileInput.uploadFile(...files);
 		}
 
-		const label = await page.waitForSelector(
-			'label[data-testid="tweetTextarea_0_label"]'
-		);
+		const label = await page.waitForSelector(textAreaSelector);
 		if (!label) {
 			throw new Error("No tweet input label");
 		}
 		await label.click({ count: 3 });
 		await label.type(text);
 		const tweetButton = await page.waitForSelector(
-			'div[data-testid="tweetButton"]:not([aria-disabled="true"])'
+			'button[data-testid="tweetButton"]:not([aria-disabled="true"])'
 		);
 		if (!tweetButton) {
 			throw new Error("No tweet button");
