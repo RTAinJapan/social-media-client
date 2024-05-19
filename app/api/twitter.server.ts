@@ -59,6 +59,17 @@ if (username && password && userEmail) {
 
 	loginPage = await newPage("https://twitter.com/login");
 
+	let recorder: puppeteer.ScreenRecorder | undefined;
+
+	if (env.PUPPETEER_SCREENSHOT_PATH) {
+		recorder = await loginPage.screencast({
+			path: `${path.join(
+				env.PUPPETEER_SCREENSHOT_PATH,
+				`twitter-${Date.now()}`
+			)}.webm`,
+		});
+	}
+
 	const abortController = new AbortController();
 
 	try {
@@ -109,6 +120,10 @@ if (username && password && userEmail) {
 	} catch (error) {
 		if (!abortController.signal.aborted) {
 			console.error(error);
+		}
+	} finally {
+		if (recorder) {
+			await recorder.stop();
 		}
 	}
 }
