@@ -1,6 +1,6 @@
 FROM --platform=linux/amd64 node:20-slim AS base
 
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y openssl ffmpeg && rm -rf /var/lib/apt/lists/*
 
 
 FROM base AS build
@@ -65,8 +65,6 @@ COPY --from=build /app/prisma prisma
 COPY --from=build /app/node_modules/.prisma node_modules/.prisma
 COPY --from=build /app/node_modules/@prisma/client node_modules/@prisma/client
 COPY --from=build /app/build build
-
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 ENV PUPPETEER_HEADLESS=true
