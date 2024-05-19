@@ -86,7 +86,6 @@ if (username && password && userEmail) {
 		await passwordInput?.press("Enter");
 
 		const waitForFinish = async () => {
-			await loginPage.waitForNavigation();
 			await loginPage.waitForSelector(textAreaSelector);
 			console.log("Login finished");
 			if (!abortController.signal.aborted) {
