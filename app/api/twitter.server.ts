@@ -30,6 +30,18 @@ const newPage = async (url: string) => {
 	return page;
 };
 
+export const takeScreenshot = async () => {
+	if (!env.PUPPETEER_SCREENSHOT_PATH) {
+		return;
+	}
+	const page = await newPage("https://twitter.com/");
+	await sleep(10_000);
+	await page.screenshot({
+		path: path.join(env.PUPPETEER_SCREENSHOT_PATH, `twitter-${Date.now()}.png`),
+	});
+	await page.close();
+};
+
 if (username && password && userEmail) {
 	twitterEnabled = true;
 
@@ -115,18 +127,6 @@ export const inputConfirmationCode = async (code: string) => {
 	} finally {
 		await loginPage.close();
 	}
-};
-
-export const takeScreenshot = async () => {
-	if (!env.PUPPETEER_SCREENSHOT_PATH) {
-		return;
-	}
-	const page = await newPage("https://twitter.com/");
-	await sleep(10_000);
-	await page.screenshot({
-		path: path.join(env.PUPPETEER_SCREENSHOT_PATH, `twitter-${Date.now()}.png`),
-	});
-	await page.close();
 };
 
 export const getTweets = async () => {
