@@ -85,8 +85,8 @@ if (username && password && userEmail) {
 
 		const waitForFinish = async () => {
 			await loginPage.waitForNavigation();
+			await sleep(10_000);
 			console.log("Login finished");
-			await screenshot(loginPage);
 			if (!abortController.signal.aborted) {
 				abortController.abort();
 				await loginPage.close();
