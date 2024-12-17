@@ -226,11 +226,15 @@ export const tweet = async (text: string, files: string[]) => {
 				throw new Error("No file input");
 			}
 			await fileInput.uploadFile(...files);
-			await page.waitForSelector('div[data-testid="attachments"]');
+			await Promise.race([
+				page.waitForSelector('div[data-testid="attachments"] img'),
+				page.waitForSelector('div[data-testid="attachments"] video'),
+			]);
 		}
 
 		const tweetButton = await page.waitForSelector(
-			'button[data-testid="tweetButtonInline"]:not([aria-disabled="true"])'
+			'button[data-testid="tweetButtonInline"]:not([aria-disabled="true"])',
+			{ timeout: 120_000 }
 		);
 		if (!tweetButton) {
 			throw new Error("No tweet button");
