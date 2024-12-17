@@ -5,7 +5,7 @@
 	"tweetFinished": "ツイートしました",
 	"tweetFailed": "ツイートに失敗しました",
 	"submit": "送信",
-	"signedInAs": "{{account}}としてログイン中",
+	"signedInAs": "{{username}}としてログイン中",
 	"signOut": "ログアウト",
 	"delete": "削除",
 	"reply": "リプライ",

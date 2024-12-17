@@ -159,7 +159,16 @@ export const getTweets = async () => {
 		await Promise.all(
 			tweets.slice(0, 10).map(async (tweetElement) => {
 				const textElement = await tweetElement.$("div[data-testid=tweetText]");
-				const text = await textElement?.evaluate((el) => el.textContent);
+				const text = await textElement?.evaluate((el) => {
+					let text = "";
+					for (const element of Array.from(el.children)) {
+						const looksEmoji = element.tagName === "IMG";
+						text += looksEmoji
+							? element.getAttribute("alt")
+							: element.textContent;
+					}
+					return text;
+				});
 				const timeElement = await tweetElement.waitForSelector("time");
 				if (!timeElement) {
 					return;
@@ -218,7 +227,8 @@ export const tweet = async (text: string, files: string[]) => {
 			throw new Error("No tweet input label");
 		}
 		await input.click({ count: 3 });
-		await input.type(text);
+		const fixedText = text.replace(/\r\n|\r/, "\n");
+		await input.type(fixedText);
 
 		if (files.length >= 1) {
 			const fileInput = await page.waitForSelector("input[type=file]");
