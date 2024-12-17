@@ -151,6 +151,7 @@ export const inputConfirmationCode = async (code: string) => {
 };
 
 export const getTweets = async () => {
+
 	const page = await newPage(`https://x.com/${username}`);
 	try {
 		await page.setViewport({ width: 1280, height: 2000 });
@@ -159,7 +160,14 @@ export const getTweets = async () => {
 		await Promise.all(
 			tweets.slice(0, 10).map(async (tweetElement) => {
 				const textElement = await tweetElement.$("div[data-testid=tweetText]");
-				const text = await textElement?.evaluate((el) => el.textContent);
+				const text = await textElement?.evaluate((el) => {
+					let text = '';
+					for (const element of Array.from(el.children)) {
+						const looksEmoji = element.tagName === 'IMG';
+						text += looksEmoji ? element.getAttribute('alt') : element.textContent;
+					}
+					return text;
+				});
 				const timeElement = await tweetElement.waitForSelector("time");
 				if (!timeElement) {
 					return;
