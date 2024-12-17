@@ -13,6 +13,8 @@ const videoFileTypes = ["video/mp4", "video/quicktime"];
 
 const TweetTextInput = () => {
 	const [tweetLength, setTweetLength] = useState(0);
+	const suggestLengthOver = tweetLength > 280;
+
 	return (
 		<>
 			<TextArea
@@ -21,8 +23,14 @@ const TweetTextInput = () => {
 					setTweetLength(twitterText.getTweetLength(e.target.value));
 				}}
 				className={css({ height: "150px", width: "100%" })}
+				{... suggestLengthOver ? {color: "red"} : {}}
 			/>
-			<div className={css({ justifySelf: "end" })}>{tweetLength}/280</div>
+			<div className={css({
+				justifySelf: "end",
+				... suggestLengthOver ? {
+					color: "red",
+				} : {}
+			})}>{tweetLength}/280</div>
 		</>
 	);
 };
