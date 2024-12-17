@@ -151,7 +151,6 @@ export const inputConfirmationCode = async (code: string) => {
 };
 
 export const getTweets = async () => {
-
 	const page = await newPage(`https://x.com/${username}`);
 	try {
 		await page.setViewport({ width: 1280, height: 2000 });
@@ -161,10 +160,12 @@ export const getTweets = async () => {
 			tweets.slice(0, 10).map(async (tweetElement) => {
 				const textElement = await tweetElement.$("div[data-testid=tweetText]");
 				const text = await textElement?.evaluate((el) => {
-					let text = '';
+					let text = "";
 					for (const element of Array.from(el.children)) {
-						const looksEmoji = element.tagName === 'IMG';
-						text += looksEmoji ? element.getAttribute('alt') : element.textContent;
+						const looksEmoji = element.tagName === "IMG";
+						text += looksEmoji
+							? element.getAttribute("alt")
+							: element.textContent;
 					}
 					return text;
 				});
@@ -226,7 +227,7 @@ export const tweet = async (text: string, files: string[]) => {
 			throw new Error("No tweet input label");
 		}
 		await input.click({ count: 3 });
-		const fixedText = text.replace(/\r\n|\r/, '\n');
+		const fixedText = text.replace(/\r\n|\r/, "\n");
 		await input.type(fixedText);
 
 		if (files.length >= 1) {
