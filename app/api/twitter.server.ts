@@ -227,7 +227,7 @@ export const tweet = async (text: string, files: string[]) => {
 			throw new Error("No tweet input label");
 		}
 		await input.click({ count: 3 });
-		const fixedText = text.replace(/\r\n|\r/, "\n");
+		const fixedText = text.replace(/\r\n|\r/g, "\n");
 		await input.type(fixedText);
 
 		if (files.length >= 1) {
