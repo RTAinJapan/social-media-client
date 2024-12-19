@@ -181,6 +181,8 @@ const ConfirmDialog = ({
 	const files = (form.elements.namedItem("files") as HTMLInputElement | null)
 		?.files;
 
+	const submittable = !text && (files?.length ?? 0) > 0;
+
 	return (
 		<Dialog.Root open={true}>
 			<Dialog.Content>
@@ -217,7 +219,9 @@ const ConfirmDialog = ({
 						<Button color="gray" onClick={onCancel}>
 							{t("cancel")}
 						</Button>
-						<Button onClick={onConfirm}>{t("submit")}</Button>
+						<Button onClick={onConfirm} disabled={!submittable}>
+							{t("submit")}
+						</Button>
 					</Flex>
 				</Flex>
 			</Dialog.Content>
