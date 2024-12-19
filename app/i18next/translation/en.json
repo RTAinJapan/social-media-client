@@ -11,5 +11,6 @@
 	"reply": "Reply",
 	"signInWithDiscord": "Sign in with Discord",
 	"confirmTweetQuestion": "Confirm tweet content",
-	"cancel": "Cancel"
+	"cancel": "Cancel",
+	"quote": "Quote"
 }

@@ -9,6 +9,7 @@ import twitterLogo from "./twitter-logo.png";
 import blueskyLogo from "./bluesky-logo.png";
 import { FullscreenSpinner } from "../../components/fullscreen-spinner";
 import { Fragment } from "react";
+import { useQuoteStore } from "./quote-store";
 
 const PostBodyText = ({ children }: { children: string }) => {
 	const lines = children.split(/\r?\n/g);
@@ -64,6 +65,7 @@ export const TweetList = () => {
 	const setReply = useReplyStore((store) => store.setReply);
 	const replyTwitterId = useReplyStore((store) => store.twitterId);
 	const replyBlueskyId = useReplyStore((store) => store.blueskyId);
+	const setQuote = useQuoteStore((store) => store.setQuote);
 	const { t } = useTranslation();
 
 	return (
@@ -134,6 +136,16 @@ export const TweetList = () => {
 									{new Date(post.postedAt).toLocaleString()}
 								</ClientOnly>
 							</div>
+							<Button
+								onClick={() => {
+									setQuote({
+										twitterId: post.twitterId,
+										blueskyId: post.blueskyId,
+									});
+								}}
+							>
+								{t("quote")}
+							</Button>
 							<Button
 								onClick={() => {
 									setReply({

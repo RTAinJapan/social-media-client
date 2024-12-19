@@ -11,5 +11,6 @@
 	"reply": "リプライ",
 	"signInWithDiscord": "Discordでログイン",
 	"confirmTweetQuestion": "以下のツイートを送信します。よろしいですか？",
-	"cancel": "キャンセル"
+	"cancel": "キャンセル",
+	"quote": "引用"
 }

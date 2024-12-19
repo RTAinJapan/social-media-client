@@ -2,6 +2,8 @@ import { useReplyStore } from "./reply-store";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import { useEffect, useId, useState } from "react";
 import {
+	Avatar,
+	Badge,
 	Button,
 	CheckboxGroup,
 	Dialog,
@@ -14,12 +16,16 @@ import { css } from "../../../styled-system/css";
 import type { loader, action } from "./route";
 import { useTranslation } from "react-i18next";
 import { FullscreenSpinner } from "../../components/fullscreen-spinner";
+import { useQuoteStore } from "./quote-store";
+import twitterLogo from "./twitter-logo.png";
+import blueskyLogo from "./bluesky-logo.png";
 
 const imageFileTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const videoFileTypes = ["video/mp4", "video/quicktime"];
 
 const TweetTextInput = () => {
 	const [tweetLength, setTweetLength] = useState(0);
+	const quoteExists = Boolean(useQuoteStore((store) => store.twitterId));
 	const suggestLengthOver = tweetLength > 280;
 
 	return (
@@ -27,7 +33,9 @@ const TweetTextInput = () => {
 			<TextArea
 				name="text"
 				onChange={(e) => {
-					setTweetLength(twitterText.getTweetLength(e.target.value));
+					setTweetLength(
+						twitterText.getTweetLength(e.target.value) + (quoteExists ? 23 : 0)
+					);
 				}}
 				className={css({ height: "150px", width: "100%" })}
 				{...(suggestLengthOver ? { color: "red" } : {})}
@@ -181,7 +189,7 @@ const ConfirmDialog = ({
 	const files = (form.elements.namedItem("files") as HTMLInputElement | null)
 		?.files;
 
-	const submittable = !text && (files?.length ?? 0) > 0;
+	const submittable = !(!text && (files?.length ?? 0) === 0);
 
 	return (
 		<Dialog.Root open={true}>
@@ -229,6 +237,88 @@ const ConfirmDialog = ({
 	);
 };
 
+const QuotePreview = () => {
+	const data = useLoaderData<typeof loader>();
+	const quoteTwitterId = useQuoteStore((store) => store.twitterId);
+	const quoteBlueskyId = useQuoteStore((store) => store.blueskyId);
+	const clearQuote = useQuoteStore((store) => store.clearQuote);
+
+	const quoteTweet =
+		quoteTwitterId && data.posts.find((p) => p.twitterId === quoteTwitterId);
+	const quoteBluesky =
+		quoteBlueskyId && data.posts.find((p) => p.blueskyId === quoteBlueskyId);
+	const quoteExists = Boolean(quoteTwitterId) || Boolean(quoteBlueskyId);
+
+	const { t } = useTranslation();
+
+	return (
+		quoteExists && (
+			<Flex direction="column" gap="2" justify="end">
+				<Flex direction="row" gap="2" justify="between">
+					<div>{t("quote")}</div>
+					<Button onClick={clearQuote}>{t("clear")}</Button>
+				</Flex>
+				{quoteTweet && (
+					<Badge>
+						<div
+							className={css({
+								display: "grid",
+								gridTemplateColumns: "auto 240px",
+								alignItems: "center",
+								gap: "4px",
+								padding: "4px",
+							})}
+						>
+							<Avatar
+								src={twitterLogo}
+								fallback="Twitter"
+								alt="Twitter"
+								size="1"
+							/>
+							<div
+								style={{
+									whiteSpace: "collapse",
+								}}
+							>
+								{quoteTweet.text}
+							</div>
+						</div>
+					</Badge>
+				)}
+				{quoteBluesky && (
+					<Badge>
+						<div
+							className={css({
+								display: "grid",
+								gridTemplateColumns: "auto 240px",
+								alignItems: "center",
+								gap: "4px",
+								padding: "4px",
+							})}
+						>
+							<Avatar
+								src={blueskyLogo}
+								fallback="Bluesky"
+								alt="Bluesky"
+								size="1"
+							/>
+							<div
+								style={{
+									whiteSpace: "collapse",
+								}}
+							>
+								{quoteBluesky.text}
+							</div>
+						</div>
+					</Badge>
+				)}
+				<input type="hidden" name="quoteTwitterId" value={quoteTwitterId} />
+				<input type="hidden" name="quoteBlueskyId" value={quoteBlueskyId} />
+			</Flex>
+		)
+	);
+};
+
 export const TweetForm = () => {
 	const fetcher = useFetcher<typeof action>();
 	const sending = fetcher.state === "submitting";
@@ -236,12 +326,14 @@ export const TweetForm = () => {
 
 	const [formKey, setFormKey] = useState(0);
 	const clearReply = useReplyStore((store) => store.clearReply);
+	const clearQuote = useQuoteStore((store) => store.clearQuote);
 	useEffect(() => {
 		if (fetcher.state === "loading" && fetcher.data?.ok) {
 			setFormKey((key) => key + 1);
 			clearReply();
+			clearQuote();
 		}
-	}, [fetcher.state, fetcher.data?.ok, clearReply]);
+	}, [fetcher.state, fetcher.data?.ok, clearReply, clearQuote]);
 
 	const [confirmForm, setConfirmForm] = useState<HTMLFormElement | null>(null);
 
@@ -268,6 +360,7 @@ export const TweetForm = () => {
 				<ServiceSelect />
 				<ReplyDisplay />
 				<TweetTextInput />
+				<QuotePreview />
 				<ImageFileInput />
 				<Button type="submit" className={css({ justifySelf: "end" })}>
 					{t("submit")}

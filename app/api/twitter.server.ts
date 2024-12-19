@@ -219,15 +219,17 @@ export const getTweets = async () => {
 	}
 };
 
-export const tweet = async (text: string, files: string[]) => {
+export const tweet = async (text: string, files: string[], quoteTweetId?: string) => {
 	const page = await newPage("https://x.com/");
+	const fixedText = (
+		quoteTweetId ? `${text}\n\nhttps://x.com/${username}/status/${quoteTweetId}` : text
+	).replace(/\r\n|\r/g, "\n");
 	try {
 		const input = await page.waitForSelector(textAreaSelector);
 		if (!input) {
 			throw new Error("No tweet input label");
 		}
 		await input.click({ count: 3 });
-		const fixedText = text.replace(/\r\n|\r/g, "\n");
 		await input.type(fixedText);
 
 		if (files.length >= 1) {
@@ -300,9 +302,13 @@ export const deleteTweet = async (tweetId: string) => {
 export const sendReply = async (
 	tweetId: string,
 	text: string,
-	files: string[]
+	files: string[],
+	quoteTweetId?: string,
 ) => {
 	const page = await newPage(`https://x.com/${username}/status/${tweetId}`);
+	const fixedText = (
+		quoteTweetId ? `${text}\n\nhttps://x.com/${username}/status/${quoteTweetId}` : text
+	).replace(/\r\n|\r/g, "\n");
 	try {
 		const replyButton = await page.waitForSelector(
 			"button[data-testid=reply]:not([aria-disabled=true])"
@@ -326,7 +332,7 @@ export const sendReply = async (
 			throw new Error("No tweet input label");
 		}
 		await label.click({ count: 3 });
-		await label.type(text);
+		await label.type(fixedText);
 		const tweetButton = await page.waitForSelector(
 			'button[data-testid="tweetButton"]:not([aria-disabled="true"])'
 		);
