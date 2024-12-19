@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import { SignOutButton } from "./sign-out-button";
 import { getBlueskyEnabled, post } from "../../api/bluesky.server";
 import fs from "node:fs/promises";
+import { getRuns } from "../../api/runs.server";
 
 interface Post {
 	twitterId?: string;
@@ -76,11 +77,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 	posts.sort((a, b) => b.postedAt.getTime() - a.postedAt.getTime());
 
+	const rundata = await getRuns();
+
 	return json({
 		session,
 		posts,
 		twitterUsername: env.TWITTER_USERNAME,
 		blueskyUsername: env.BLUESKY_USERNAME,
+		runs: rundata,
 	});
 };
 
@@ -131,6 +135,8 @@ const actionSchema = zfd.formData({
 	service: zfd.repeatableOfType(zfd.text(z.enum(["twitter", "bluesky"]))),
 	replyTwitterId: zfd.text(z.string().optional()),
 	replyBlueskyId: zfd.text(z.string().optional()),
+	quoteTwitterId: zfd.text(z.string().optional()),
+	quoteBlueskyId: zfd.text(z.string().optional()),
 });
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -148,8 +154,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 			)
 		);
 
-		const { text, service, replyTwitterId, replyBlueskyId } =
-			actionSchema.parse(formData);
+		const {
+			text,
+			service,
+			replyTwitterId,
+			replyBlueskyId,
+			quoteTwitterId,
+			quoteBlueskyId,
+		} = actionSchema.parse(formData);
 
 		const postOnTwitter = service.includes("twitter");
 		const postOnBluesky = service.includes("bluesky");
@@ -170,16 +182,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 				postOnTwitter &&
 					replyTwitterId &&
 					getTwitterEnabled() &&
-					sendReply(replyTwitterId, text ?? "", filePaths),
+					sendReply(replyTwitterId, text ?? "", filePaths, quoteTwitterId),
 				postOnBluesky &&
 					replyBlueskyId &&
 					getBlueskyEnabled() &&
-					post(text ?? "", filePaths, replyBlueskyId),
+					post(text ?? "", filePaths, replyBlueskyId, quoteBlueskyId),
 			]);
 		} else {
 			await Promise.all([
-				postOnTwitter && getTwitterEnabled() && tweet(text ?? "", filePaths),
-				postOnBluesky && getBlueskyEnabled() && post(text ?? "", filePaths),
+				postOnTwitter &&
+					getTwitterEnabled() &&
+					tweet(text ?? "", filePaths, quoteTwitterId),
+				postOnBluesky &&
+					getBlueskyEnabled() &&
+					post(text ?? "", filePaths, undefined, quoteBlueskyId),
 			]);
 		}
 

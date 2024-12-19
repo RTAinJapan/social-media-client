@@ -1,29 +1,48 @@
 import { useReplyStore } from "./reply-store";
 import { useFetcher, useLoaderData } from "@remix-run/react";
-import { useEffect, useId, useState } from "react";
-import { Button, CheckboxGroup, Link, TextArea } from "@radix-ui/themes";
+import { useEffect, useId, useRef, useState } from "react";
+import {
+	Avatar,
+	Badge,
+	Button,
+	CheckboxGroup,
+	Dialog,
+	Flex,
+	Link,
+	Select,
+	TextArea,
+} from "@radix-ui/themes";
 import twitterText from "twitter-text";
 import { css } from "../../../styled-system/css";
 import type { loader, action } from "./route";
 import { useTranslation } from "react-i18next";
 import { FullscreenSpinner } from "../../components/fullscreen-spinner";
+import { useQuoteStore } from "./quote-store";
+import twitterLogo from "./twitter-logo.png";
+import blueskyLogo from "./bluesky-logo.png";
+import { templates } from "./templates";
 
 const imageFileTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const videoFileTypes = ["video/mp4", "video/quicktime"];
 
 const TweetTextInput = () => {
 	const [tweetLength, setTweetLength] = useState(0);
+	const quoteExists = Boolean(useQuoteStore((store) => store.twitterId));
 	const suggestLengthOver = tweetLength > 280;
+	const textArea = useRef<HTMLTextAreaElement>(null);
 
 	return (
 		<>
 			<TextArea
 				name="text"
 				onChange={(e) => {
-					setTweetLength(twitterText.getTweetLength(e.target.value));
+					setTweetLength(
+						twitterText.getTweetLength(e.target.value) + (quoteExists ? 23 : 0)
+					);
 				}}
 				className={css({ height: "150px", width: "100%" })}
 				{...(suggestLengthOver ? { color: "red" } : {})}
+				ref={textArea}
 			/>
 			<div
 				className={css({
@@ -32,6 +51,18 @@ const TweetTextInput = () => {
 				})}
 			>
 				{tweetLength}/280
+			</div>
+			<div>
+				<TemplateSelectDialog
+					applyTemplate={(text) => {
+						if (textArea.current) {
+							textArea.current.value = text;
+							setTweetLength(
+								twitterText.getTweetLength(text) + (quoteExists ? 23 : 0)
+							);
+						}
+					}}
+				/>
 			</div>
 		</>
 	);
@@ -56,7 +87,9 @@ const ImageFileInput = () => {
 					multiple
 					id={inputId}
 					onChange={(e) => {
-						setFiles(e.target.files ? Array.from(e.target.files) : null);
+						setFiles(
+							e.target.files ? Array.from(e.target.files).slice(0, 4) : null
+						);
 					}}
 				/>
 			</div>
@@ -158,6 +191,232 @@ const ServiceSelect = () => {
 	);
 };
 
+const ConfirmDialog = ({
+	form,
+	onConfirm,
+	onCancel,
+}: {
+	form: HTMLFormElement;
+	onConfirm: () => void;
+	onCancel: () => void;
+}) => {
+	const { t } = useTranslation();
+
+	const text = (form.elements.namedItem("text") as HTMLInputElement | null)
+		?.value;
+	const files = (form.elements.namedItem("files") as HTMLInputElement | null)
+		?.files;
+
+	const submittable = !(!text && (files?.length ?? 0) === 0);
+
+	return (
+		<Dialog.Root open={true}>
+			<Dialog.Content>
+				<Dialog.Title>{t("confirmTweetQuestion")}</Dialog.Title>
+				<Flex direction="column" gap="3">
+					<TextArea
+						value={text}
+						rows={6}
+						onChange={(e) => {
+							e.preventDefault();
+						}}
+					/>
+					<div
+						className={css({
+							display: "grid",
+							gridTemplateColumns: "repeat(2, auto)",
+							gridTemplateRows: "repeat(2, auto)",
+							gap: "4px",
+						})}
+					>
+						{files &&
+							Array.from(files).map((file) =>
+								imageFileTypes.includes(file.type) ? (
+									<img
+										key={file.name}
+										src={URL.createObjectURL(file)}
+										alt={file.name}
+									/>
+								) : (
+									<video
+										key={file.name}
+										src={URL.createObjectURL(file)}
+										controls
+										muted
+									/>
+								)
+							)}
+					</div>
+					<Flex direction="row-reverse" gap="3">
+						<Button color="gray" onClick={onCancel}>
+							{t("cancel")}
+						</Button>
+						<Button onClick={onConfirm} disabled={!submittable}>
+							{t("submit")}
+						</Button>
+					</Flex>
+				</Flex>
+			</Dialog.Content>
+		</Dialog.Root>
+	);
+};
+
+const QuotePreview = () => {
+	const data = useLoaderData<typeof loader>();
+	const quoteTwitterId = useQuoteStore((store) => store.twitterId);
+	const quoteBlueskyId = useQuoteStore((store) => store.blueskyId);
+	const clearQuote = useQuoteStore((store) => store.clearQuote);
+
+	const quoteTweet =
+		quoteTwitterId && data.posts.find((p) => p.twitterId === quoteTwitterId);
+	const quoteBluesky =
+		quoteBlueskyId && data.posts.find((p) => p.blueskyId === quoteBlueskyId);
+	const quoteExists = Boolean(quoteTwitterId) || Boolean(quoteBlueskyId);
+
+	const { t } = useTranslation();
+
+	return (
+		quoteExists && (
+			<Flex direction="column" gap="2" justify="end">
+				<Flex direction="row" gap="2" justify="between">
+					<div>{t("quote")}</div>
+					<Button onClick={clearQuote}>{t("clear")}</Button>
+				</Flex>
+				{quoteTweet && (
+					<Badge>
+						<div
+							className={css({
+								display: "grid",
+								gridTemplateColumns: "auto 240px",
+								alignItems: "center",
+								gap: "4px",
+								padding: "4px",
+							})}
+						>
+							<Avatar
+								src={twitterLogo}
+								fallback="Twitter"
+								alt="Twitter"
+								size="1"
+							/>
+							<div
+								style={{
+									whiteSpace: "collapse",
+								}}
+							>
+								{quoteTweet.text}
+							</div>
+						</div>
+					</Badge>
+				)}
+				{quoteBluesky && (
+					<Badge>
+						<div
+							className={css({
+								display: "grid",
+								gridTemplateColumns: "auto 240px",
+								alignItems: "center",
+								gap: "4px",
+								padding: "4px",
+							})}
+						>
+							<Avatar
+								src={blueskyLogo}
+								fallback="Bluesky"
+								alt="Bluesky"
+								size="1"
+							/>
+							<div
+								style={{
+									whiteSpace: "collapse",
+								}}
+							>
+								{quoteBluesky.text}
+							</div>
+						</div>
+					</Badge>
+				)}
+				<input type="hidden" name="quoteTwitterId" value={quoteTwitterId} />
+				<input type="hidden" name="quoteBlueskyId" value={quoteBlueskyId} />
+			</Flex>
+		)
+	);
+};
+
+const TemplateSelectDialog = ({
+	applyTemplate,
+}: {
+	applyTemplate: (text: string) => void;
+}) => {
+	const { t } = useTranslation();
+	const data = useLoaderData<typeof loader>();
+	const runs = data.runs;
+
+	const [runId, setRunId] = useState<string>();
+	const previewRun = runs.find((r) => String(r.id) === runId) ?? {
+		id: 0,
+		gamename: "",
+		category: "",
+		runner: [],
+		commentary: [],
+	};
+
+	const [open, setOpen] = useState(false);
+
+	return (
+		<Dialog.Root open={open} onOpenChange={setOpen}>
+			<Dialog.Trigger>
+				<Button>{t("template")}</Button>
+			</Dialog.Trigger>
+			<Dialog.Content>
+				<Dialog.Title>Select template</Dialog.Title>
+				<Flex direction="column" gap="4">
+					<Select.Root
+						onValueChange={(v) => {
+							setRunId(v);
+						}}
+					>
+						<Select.Trigger />
+						<Select.Content>
+							{runs.map((r) => (
+								<Select.Item key={r.id} value={String(r.id)}>
+									{r.gamename}
+								</Select.Item>
+							))}
+						</Select.Content>
+					</Select.Root>
+					<>
+						{templates.map((template, idx) => (
+							<Flex key={idx} direction="column" gap="2">
+								<div>{t(`template-${template.label}`)}</div>
+								<TextArea
+									rows={6}
+									value={template.apply(previewRun)}
+									onChange={(e) => {
+										e.preventDefault();
+									}}
+								/>
+								<Flex justify="end">
+									<Button
+										type="button"
+										onClick={() => {
+											applyTemplate(template.apply(previewRun));
+											setOpen(false);
+										}}
+										disabled={runId === undefined}
+									>
+										{t("apply")}
+									</Button>
+								</Flex>
+							</Flex>
+						))}
+					</>
+				</Flex>
+			</Dialog.Content>
+		</Dialog.Root>
+	);
+};
+
 export const TweetForm = () => {
 	const fetcher = useFetcher<typeof action>();
 	const sending = fetcher.state === "submitting";
@@ -165,12 +424,16 @@ export const TweetForm = () => {
 
 	const [formKey, setFormKey] = useState(0);
 	const clearReply = useReplyStore((store) => store.clearReply);
+	const clearQuote = useQuoteStore((store) => store.clearQuote);
 	useEffect(() => {
 		if (fetcher.state === "loading" && fetcher.data?.ok) {
 			setFormKey((key) => key + 1);
 			clearReply();
+			clearQuote();
 		}
-	}, [fetcher.state, fetcher.data?.ok, clearReply]);
+	}, [fetcher.state, fetcher.data?.ok, clearReply, clearQuote]);
+
+	const [confirmForm, setConfirmForm] = useState<HTMLFormElement | null>(null);
 
 	return (
 		<>
@@ -187,16 +450,33 @@ export const TweetForm = () => {
 					gap: "8px",
 				})}
 				key={formKey}
+				onSubmit={(e) => {
+					e.preventDefault();
+					setConfirmForm(e.currentTarget);
+				}}
 			>
 				<ServiceSelect />
 				<ReplyDisplay />
 				<TweetTextInput />
+				<QuotePreview />
 				<ImageFileInput />
 				<Button type="submit" className={css({ justifySelf: "end" })}>
 					{t("submit")}
 				</Button>
 			</fetcher.Form>
 			<FullscreenSpinner show={sending} />
+			{confirmForm && (
+				<ConfirmDialog
+					form={confirmForm}
+					onConfirm={() => {
+						fetcher.submit(confirmForm);
+						setConfirmForm(null);
+					}}
+					onCancel={() => {
+						setConfirmForm(null);
+					}}
+				/>
+			)}
 		</>
 	);
 };

@@ -1,11 +1,14 @@
-import { BskyAgent } from "@atproto/api";
+import { BlobRef, BskyAgent } from "@atproto/api";
 import { env } from "../env.server";
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { tmpDir } from "../tmp-dir.server";
 import { prisma } from "../prisma.server";
-import { isThreadViewPost } from "@atproto/api/dist/client/types/app/bsky/feed/defs";
+import {
+	isThreadViewPost,
+	type PostView,
+} from "@atproto/api/dist/client/types/app/bsky/feed/defs";
 
 let blueskyEnabled = false;
 export const getBlueskyEnabled = () => blueskyEnabled;
@@ -82,16 +85,69 @@ const uploadFile = async (filePath: string) => {
 	return res.data.blob;
 };
 
-export const post = async (text: string, files: string[], replyTo?: string) => {
+const makeEmbed = (uploads: BlobRef[], quote: PostView | null) => {
+	if (quote && uploads.length > 0) {
+		return {
+			$type: "app.bsky.embed.recordWithMedia",
+			media: {
+				$type: "app.bsky.embed.images",
+				images: uploads.map((result) => ({
+					image: result,
+					alt: "", // TODO: allow setting alt text
+				})),
+			},
+			record: {
+				$type: "app.bsky.embed.record",
+				record: {
+					uri: quote.uri,
+					cid: quote.cid,
+				},
+			},
+		};
+	}
+
+	if (quote && uploads.length === 0) {
+		return {
+			$type: "app.bsky.embed.record",
+			record: {
+				uri: quote.uri,
+				cid: quote.cid,
+			},
+		};
+	}
+
+	return {
+		$type: "app.bsky.embed.images",
+		images: uploads.map((result) => ({
+			image: result,
+			alt: "", // TODO: allow setting alt text
+		})),
+	};
+};
+
+export const post = async (
+	text: string,
+	files: string[],
+	replyTo?: string,
+	quotePostId?: string
+) => {
 	const replyPostThreadData = replyTo
 		? await agent.getPostThread({ uri: replyTo })
 		: null;
 	// console.log(JSON.stringify(replyPost?.data, null, 2));
 	// throw new Error("tmp!!!");
-
 	const replyPost =
 		replyPostThreadData && isThreadViewPost(replyPostThreadData.data.thread)
 			? replyPostThreadData.data.thread.post
+			: null;
+
+	const quotePostThreadData = quotePostId
+		? await agent.getPostThread({ uri: quotePostId })
+		: null;
+
+	const quotePost =
+		quotePostThreadData && isThreadViewPost(quotePostThreadData.data.thread)
+			? quotePostThreadData.data.thread.post
 			: null;
 
 	const replyPostRecord = replyPost?.record as
@@ -102,13 +158,7 @@ export const post = async (text: string, files: string[], replyTo?: string) => {
 	const uploadResults = await Promise.all(files.map(uploadFile));
 	await agent.post({
 		text,
-		embed: {
-			$type: "app.bsky.embed.images",
-			images: uploadResults.map((result) => ({
-				image: result,
-				alt: "", // TODO: allow setting alt text
-			})),
-		},
+		embed: makeEmbed(uploadResults, quotePost),
 		reply:
 			replyPost && rootPost
 				? {
