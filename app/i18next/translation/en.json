@@ -9,5 +9,7 @@
 	"signOut": "Sign out",
 	"delete": "Delete",
 	"reply": "Reply",
-	"signInWithDiscord": "Sign in with Discord"
+	"signInWithDiscord": "Sign in with Discord",
+	"confirmTweetQuestion": "Confirm tweet content",
+	"cancel": "Cancel"
 }

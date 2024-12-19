@@ -9,5 +9,7 @@
 	"signOut": "ログアウト",
 	"delete": "削除",
 	"reply": "リプライ",
-	"signInWithDiscord": "Discordでログイン"
+	"signInWithDiscord": "Discordでログイン",
+	"confirmTweetQuestion": "以下のツイートを送信します。よろしいですか？",
+	"cancel": "キャンセル"
 }

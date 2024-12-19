@@ -1,7 +1,14 @@
 import { useReplyStore } from "./reply-store";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import { useEffect, useId, useState } from "react";
-import { Button, CheckboxGroup, Link, TextArea } from "@radix-ui/themes";
+import {
+	Button,
+	CheckboxGroup,
+	Dialog,
+	Flex,
+	Link,
+	TextArea,
+} from "@radix-ui/themes";
 import twitterText from "twitter-text";
 import { css } from "../../../styled-system/css";
 import type { loader, action } from "./route";
@@ -158,6 +165,66 @@ const ServiceSelect = () => {
 	);
 };
 
+const ConfirmDialog = ({
+	form,
+	onConfirm,
+	onCancel,
+}: {
+	form: HTMLFormElement;
+	onConfirm: () => void;
+	onCancel: () => void;
+}) => {
+	const { t } = useTranslation();
+
+	const text = (form.elements.namedItem("text") as HTMLInputElement | null)
+		?.value;
+	const files = (form.elements.namedItem("files") as HTMLInputElement | null)
+		?.files;
+
+	return (
+		<Dialog.Root open={true}>
+			<Dialog.Content>
+				<Dialog.Title>{t("confirmTweetQuestion")}</Dialog.Title>
+				<Flex direction="column" gap="3">
+					<TextArea value={text} readOnly />
+					<div
+						className={css({
+							display: "grid",
+							gridTemplateColumns: "repeat(2, auto)",
+							gridTemplateRows: "repeat(2, auto)",
+							gap: "4px",
+						})}
+					>
+						{files &&
+							Array.from(files).map((file) =>
+								imageFileTypes.includes(file.type) ? (
+									<img
+										key={file.name}
+										src={URL.createObjectURL(file)}
+										alt={file.name}
+									/>
+								) : (
+									<video
+										key={file.name}
+										src={URL.createObjectURL(file)}
+										controls
+										muted
+									/>
+								)
+							)}
+					</div>
+					<Flex direction="row-reverse" gap="3">
+						<Button color="gray" onClick={onCancel}>
+							{t("cancel")}
+						</Button>
+						<Button onClick={onConfirm}>{t("submit")}</Button>
+					</Flex>
+				</Flex>
+			</Dialog.Content>
+		</Dialog.Root>
+	);
+};
+
 export const TweetForm = () => {
 	const fetcher = useFetcher<typeof action>();
 	const sending = fetcher.state === "submitting";
@@ -171,6 +238,8 @@ export const TweetForm = () => {
 			clearReply();
 		}
 	}, [fetcher.state, fetcher.data?.ok, clearReply]);
+
+	const [confirmForm, setConfirmForm] = useState<HTMLFormElement | null>(null);
 
 	return (
 		<>
@@ -187,6 +256,10 @@ export const TweetForm = () => {
 					gap: "8px",
 				})}
 				key={formKey}
+				onSubmit={(e) => {
+					e.preventDefault();
+					setConfirmForm(e.currentTarget);
+				}}
 			>
 				<ServiceSelect />
 				<ReplyDisplay />
@@ -197,6 +270,18 @@ export const TweetForm = () => {
 				</Button>
 			</fetcher.Form>
 			<FullscreenSpinner show={sending} />
+			{confirmForm && (
+				<ConfirmDialog
+					form={confirmForm}
+					onConfirm={() => {
+						fetcher.submit(confirmForm);
+						setConfirmForm(null);
+					}}
+					onCancel={() => {
+						setConfirmForm(null);
+					}}
+				/>
+			)}
 		</>
 	);
 };
