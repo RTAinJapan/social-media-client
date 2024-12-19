@@ -71,7 +71,9 @@ const ImageFileInput = () => {
 					multiple
 					id={inputId}
 					onChange={(e) => {
-						setFiles(e.target.files ? Array.from(e.target.files) : null);
+						setFiles(
+							e.target.files ? Array.from(e.target.files).slice(0, 4) : null
+						);
 					}}
 				/>
 			</div>
