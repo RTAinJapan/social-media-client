@@ -219,10 +219,16 @@ export const getTweets = async () => {
 	}
 };
 
-export const tweet = async (text: string, files: string[], quoteTweetId?: string) => {
+export const tweet = async (
+	text: string,
+	files: string[],
+	quoteTweetId?: string
+) => {
 	const page = await newPage("https://x.com/");
 	const fixedText = (
-		quoteTweetId ? `${text}\n\nhttps://x.com/${username}/status/${quoteTweetId}` : text
+		quoteTweetId
+			? `${text}\n\nhttps://x.com/${username}/status/${quoteTweetId}`
+			: text
 	).replace(/\r\n|\r/g, "\n");
 	try {
 		const input = await page.waitForSelector(textAreaSelector);
@@ -303,11 +309,13 @@ export const sendReply = async (
 	tweetId: string,
 	text: string,
 	files: string[],
-	quoteTweetId?: string,
+	quoteTweetId?: string
 ) => {
 	const page = await newPage(`https://x.com/${username}/status/${tweetId}`);
 	const fixedText = (
-		quoteTweetId ? `${text}\n\nhttps://x.com/${username}/status/${quoteTweetId}` : text
+		quoteTweetId
+			? `${text}\n\nhttps://x.com/${username}/status/${quoteTweetId}`
+			: text
 	).replace(/\r\n|\r/g, "\n");
 	try {
 		const replyButton = await page.waitForSelector(

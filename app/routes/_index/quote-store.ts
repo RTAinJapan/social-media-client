@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 export const useQuoteStore = create<{
 	twitterId?: string;
@@ -12,4 +12,4 @@ export const useQuoteStore = create<{
 	clearQuote: () => {
 		set({ twitterId: undefined, blueskyId: undefined });
 	},
-}))
+}));

@@ -19,6 +19,8 @@ const envSchema = z.object({
 
 	BLUESKY_USERNAME: z.string().optional(),
 	BLUESKY_PASSWORD: z.string().optional(),
+
+	RUNDATA_API_URL: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

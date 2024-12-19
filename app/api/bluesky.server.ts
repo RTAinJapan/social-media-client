@@ -5,7 +5,10 @@ import path from "node:path";
 import sharp from "sharp";
 import { tmpDir } from "../tmp-dir.server";
 import { prisma } from "../prisma.server";
-import { isThreadViewPost, type PostView } from "@atproto/api/dist/client/types/app/bsky/feed/defs";
+import {
+	isThreadViewPost,
+	type PostView,
+} from "@atproto/api/dist/client/types/app/bsky/feed/defs";
 
 let blueskyEnabled = false;
 export const getBlueskyEnabled = () => blueskyEnabled;
@@ -98,9 +101,9 @@ const makeEmbed = (uploads: BlobRef[], quote: PostView | null) => {
 				record: {
 					uri: quote.uri,
 					cid: quote.cid,
-				}
-			}
-		}
+				},
+			},
+		};
 	}
 
 	if (quote && uploads.length === 0) {
@@ -109,8 +112,8 @@ const makeEmbed = (uploads: BlobRef[], quote: PostView | null) => {
 			record: {
 				uri: quote.uri,
 				cid: quote.cid,
-			}
-		}
+			},
+		};
 	}
 
 	return {
@@ -119,27 +122,33 @@ const makeEmbed = (uploads: BlobRef[], quote: PostView | null) => {
 			image: result,
 			alt: "", // TODO: allow setting alt text
 		})),
-	}
-}
+	};
+};
 
-export const post = async (text: string, files: string[], replyTo?: string, quotePostId?: string,) => {
+export const post = async (
+	text: string,
+	files: string[],
+	replyTo?: string,
+	quotePostId?: string
+) => {
 	const replyPostThreadData = replyTo
 		? await agent.getPostThread({ uri: replyTo })
 		: null;
 	// console.log(JSON.stringify(replyPost?.data, null, 2));
 	// throw new Error("tmp!!!");
 	const replyPost =
-	replyPostThreadData && isThreadViewPost(replyPostThreadData.data.thread)
-		? replyPostThreadData.data.thread.post
-		: null;
+		replyPostThreadData && isThreadViewPost(replyPostThreadData.data.thread)
+			? replyPostThreadData.data.thread.post
+			: null;
 
 	const quotePostThreadData = quotePostId
 		? await agent.getPostThread({ uri: quotePostId })
 		: null;
 
-	const quotePost = quotePostThreadData && isThreadViewPost(quotePostThreadData.data.thread)
-		? quotePostThreadData.data.thread.post
-		: null;
+	const quotePost =
+		quotePostThreadData && isThreadViewPost(quotePostThreadData.data.thread)
+			? quotePostThreadData.data.thread.post
+			: null;
 
 	const replyPostRecord = replyPost?.record as
 		| { reply?: { root?: { uri: string; cid: string } } }

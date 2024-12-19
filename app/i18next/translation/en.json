@@ -12,5 +12,14 @@
 	"signInWithDiscord": "Sign in with Discord",
 	"confirmTweetQuestion": "Confirm tweet content",
 	"cancel": "Cancel",
-	"quote": "Quote"
+	"quote": "Quote",
+	"apply": "Apply",
+	"template": "Template",
+	"templateTitle": "Select template",
+	"template-setup": "Next game",
+	"template-finishWithTime": "Result with finished time",
+	"template-finishWithoutTime": "Result without finished time",
+	"template-finishOnlyTime": "Result",
+	"template-running": "During run",
+	"template-backup": "Add backup run"
 }

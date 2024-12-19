@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import { SignOutButton } from "./sign-out-button";
 import { getBlueskyEnabled, post } from "../../api/bluesky.server";
 import fs from "node:fs/promises";
+import { getRuns } from "../../api/runs.server";
 
 interface Post {
 	twitterId?: string;
@@ -76,11 +77,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 	posts.sort((a, b) => b.postedAt.getTime() - a.postedAt.getTime());
 
+	const rundata = await getRuns();
+
 	return json({
 		session,
 		posts,
 		twitterUsername: env.TWITTER_USERNAME,
 		blueskyUsername: env.BLUESKY_USERNAME,
+		runs: rundata,
 	});
 };
 

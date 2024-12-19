@@ -12,5 +12,14 @@
 	"signInWithDiscord": "Discordでログイン",
 	"confirmTweetQuestion": "以下のツイートを送信します。よろしいですか？",
 	"cancel": "キャンセル",
-	"quote": "引用"
+	"quote": "引用",
+	"apply": "反映",
+	"template": "テンプレート",
+	"templateTitle": "テンプレート選択",
+	"template-setup": "次のゲーム",
+	"template-finishWithTime": "ゲーム終了 クリアタイム有",
+	"template-finishWithoutTime": "ゲーム終了 クリアタイム無",
+	"template-finishOnlyTime": "ゲーム終了 クリアタイムだけ別でツイート",
+	"template-running": "ゲーム中",
+	"template-backup": "バックアップ挿入"
 }
